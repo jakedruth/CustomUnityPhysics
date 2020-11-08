@@ -333,9 +333,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 354102693}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1b3490a1743a5dc4b904e715ec673e8c, type: 3}
+  m_Script: {fileID: 11500000, guid: 749dcccca5d32c042858c05035360b15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  startTime: 100
 --- !u!1 &597221550
 GameObject:
   m_ObjectHideFlags: 0
@@ -503,7 +504,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 6.2e-43, y: -5.0996398e-14, z: 6.2e-43, w: 0}
+  m_BoundingSphereOverride: {x: 3.0092666e-36, y: 1.009742e-28, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
@@ -643,6 +644,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1308079646}
+  - component: {fileID: 1308079648}
   - component: {fileID: 1308079647}
   m_Layer: 0
   m_Name: Target
@@ -678,8 +680,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0023d08fe04134a4eb0cdc23b932a499, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  radius: 0.5
   bottomLeft: {x: -7, y: -3, z: 0}
   upperRight: {x: 8, y: 5, z: 0}
+--- !u!114 &1308079648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308079645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a88dbc8d1f1d6504ebfc3bc838f55907, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ignoreForces: 0
+  mass: 1
+  dampingConstant: 0.999
 --- !u!1 &1965383070
 GameObject:
   m_ObjectHideFlags: 0
@@ -727,9 +745,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mFirePoint: {fileID: 750266850}
   projectiles:
-  - {fileID: 5434116292795962954, guid: 7a92045f6fcfff94a9574d6aaa834de5, type: 3}
   - {fileID: 5434116292795962954, guid: 83abeea2a2f02a84a8527d71d71f8488, type: 3}
-  projectileIndex: 0
+  - {fileID: 5434116292795962954, guid: 7a92045f6fcfff94a9574d6aaa834de5, type: 3}
   mMinAngle: -80
   mMaxAngle: 80
   mAngleRate: 100

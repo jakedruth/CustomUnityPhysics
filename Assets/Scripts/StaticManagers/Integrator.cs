@@ -3,50 +3,36 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Integrator : MonoBehaviour
+public static class Integrator
 {
-    public static Integrator instance;
-    private List<Particle2D> _particles;
+    public static readonly List<Particle2D> Particles;
 
-    public static List<Particle2D> Particles
+    static Integrator()
     {
-        get { return instance._particles; }
+        Particles = new List<Particle2D>();
     }
 
-    void Awake()
+    public static void FixedUpdate(float dt)
     {
-        if (instance != null)
+        Integrate(dt);
+    }
+
+    private static void Integrate(float dt)
+    {
+        for (int i = 0; i < Particles.Count; i++)
         {
-            Destroy(this);
-            return;
-        }
-
-        instance = this;
-        _particles = new List<Particle2D>();
-        DontDestroyOnLoad(gameObject);
-    }
-
-    void FixedUpdate()
-    {
-        Integrate();
-    }
-
-    private void Integrate()
-    {
-        for (int i = 0; i < _particles.Count; i++)
-        {
-            Particle2D particle = _particles[i];
+            Particle2D particle = Particles[i];
             if (particle != null)
-                Integrate(particle, Time.fixedDeltaTime);
+                Integrate(particle, dt);
             else
             {
-                _particles.RemoveAt(i);
+                Particles.RemoveAt(i);
                 i--;
             }
         }
     }
 
-    private void Integrate(Particle2D particle, float dt)
+    private static void Integrate(Particle2D particle, float dt)
     {
         if (particle.inverseMass <= 0) // Immovable Object
             return;
@@ -76,11 +62,16 @@ public class Integrator : MonoBehaviour
 
     public static void AddParticle(Particle2D particle)
     {
-        instance._particles.Add(particle);
+        Particles.Add(particle);
     }
 
     public static bool RemoveParticle(Particle2D particle)
     {
-        return instance._particles.Remove(particle);
+        return Particles.Remove(particle);
+    }
+
+    public static void AddForce(Particle2D particle, Vector3 force)
+    {
+        particle.AddForce(force);
     }
 }

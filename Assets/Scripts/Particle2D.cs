@@ -22,8 +22,6 @@ public class Particle2D : MonoBehaviour
             inverseMass = float.PositiveInfinity;
 
         Integrator.AddParticle(this);
-
-        acceleration.y = -2f;
     }
 
     void Update()
@@ -31,7 +29,6 @@ public class Particle2D : MonoBehaviour
         const float killZone = -10;
         if (transform.position.y <= killZone)
         {
-            Debug.Log("Destroying Self");
             Destroy(gameObject);
         }
     }
@@ -39,5 +36,11 @@ public class Particle2D : MonoBehaviour
     void OnDestroy()
     {
         Integrator.RemoveParticle(this);
+        ForceManager.Remove(this);
+    }
+
+    public void AddForce(Vector3 force)
+    {
+        accumulatedForces += force;
     }
 }

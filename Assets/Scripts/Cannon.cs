@@ -6,7 +6,7 @@ public class Cannon : MonoBehaviour
 {
     public Transform mFirePoint;
     public GameObject[] projectiles;
-    public int projectileIndex;
+    private int _projectileIndex;
 
     public float mMinAngle;
     public float mMaxAngle;
@@ -27,7 +27,7 @@ public class Cannon : MonoBehaviour
 
         // Handle Switching Weapons
         if (Input.GetKeyDown(KeyCode.W))
-            projectileIndex = (projectileIndex + 1) % projectiles.Length;
+            _projectileIndex = (_projectileIndex + 1) % projectiles.Length;
 
         // Handle Firing Gun
         if (Input.GetKeyDown(KeyCode.Return))
@@ -36,7 +36,7 @@ public class Cannon : MonoBehaviour
 
     public void Fire()
     {
-        GameObject projectile = Instantiate(projectiles[projectileIndex], mFirePoint.position,
+        GameObject projectile = Instantiate(projectiles[_projectileIndex], mFirePoint.position,
             Quaternion.AngleAxis(_mAngle, Vector3.forward));
 
         projectile.name = "Projectile";

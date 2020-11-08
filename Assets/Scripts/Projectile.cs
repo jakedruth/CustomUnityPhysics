@@ -11,8 +11,10 @@ public class Projectile : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Particle2D particle2D = GetComponent<Particle2D>();
-        particle2D.velocity = transform.right * speed;
-        particle2D.acceleration = acceleration;
+        Particle2D particle = GetComponent<Particle2D>();
+        particle.velocity = transform.right * speed;
+        particle.acceleration = acceleration;
+
+        ForceManager.Add(FindObjectOfType<Target>().attractor, particle);
     }
 }
