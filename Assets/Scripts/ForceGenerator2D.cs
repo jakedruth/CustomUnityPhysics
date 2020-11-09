@@ -79,13 +79,15 @@ public class BuoyancyForceGenerator : ForceGenerator2D
     public float maxDepth;
     public float volume;
     public float waterHeight;
+    public float dampingConstant;
     public float liquidDensity;
 
-    public BuoyancyForceGenerator(float maxDepth, float volume, float waterHeight, float liquidDensity = 1000)
+    public BuoyancyForceGenerator(float maxDepth, float volume, float waterHeight, float dampingConstant, float liquidDensity = 1000)
     {
         this.maxDepth = maxDepth;
         this.volume = volume;
         this.waterHeight = waterHeight;
+        this.dampingConstant = dampingConstant;
         this.liquidDensity = liquidDensity;
     }
 
@@ -93,20 +95,52 @@ public class BuoyancyForceGenerator : ForceGenerator2D
     {
         float depth = particle.transform.position.y;
 
-        if (depth <= waterHeight - maxDepth)
+        if (depth >= waterHeight + maxDepth)
             return;
 
         Vector3 force = Vector3.zero;
 
-        if (depth >= waterHeight + maxDepth)
+        if (depth <= waterHeight - maxDepth)
         {
-            force.y = -liquidDensity * volume;
+            force.y = liquidDensity * volume;
         }
         else
         {
-            force.y = -liquidDensity * volume * ((depth - waterHeight + maxDepth) / (2 * maxDepth));
+            force.y = liquidDensity * volume * ((depth - maxDepth - waterHeight) / (2 * maxDepth));
         }
 
         particle.AddForce(force);
+        particle.velocity *= Mathf.Pow(dampingConstant, dt);
+    }
+}
+
+public class SpringForceGenerator : ForceGenerator2D
+{
+    public Particle2D other;
+    public float springConstant;
+    public float restLength;
+
+    public SpringForceGenerator(Particle2D other, float springConstant, float restLength)
+    {
+        this.other = other;
+        this.springConstant = springConstant;
+        this.restLength = restLength;
+    }
+
+    public override void UpdateForce(Particle2D particle, float dt)
+    {
+        if (other == null)
+        {
+            ForceManager.Remove(this);
+            return;
+        }
+
+        Vector3 displacement = other.transform.position - particle.transform.position;
+        float distance = displacement.magnitude;
+        Vector3 direction = displacement / distance;
+
+        float magnitude = (distance - restLength) * springConstant;
+
+        particle.AddForce(direction * magnitude);
     }
 }

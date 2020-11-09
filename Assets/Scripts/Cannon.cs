@@ -13,7 +13,7 @@ public class Cannon : MonoBehaviour
     public float mAngleRate;
     private float _mAngle;
     
-    // Update is called once per frame
+    // UpdateForce is called once per frame
     void Update()
     {
         // Handle rotations

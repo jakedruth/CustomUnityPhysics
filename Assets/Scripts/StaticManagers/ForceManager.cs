@@ -1,39 +1,36 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using UnityEngine.PlayerLoop;
 
 public static class ForceManager
 {
-    internal struct Pair
+    internal struct ForceGeneratorParticlePair
     {
         public ForceGenerator2D forceGenerator;
         public Particle2D particle;
 
-        internal Pair(ForceGenerator2D forceGenerator, Particle2D particle)
+        internal ForceGeneratorParticlePair(ForceGenerator2D forceGenerator, Particle2D particle)
         {
             this.forceGenerator = forceGenerator;
             this.particle = particle;
         }
 
-        public void Update(float dt)
+        public void UpdateForce(float dt)
         {
             forceGenerator.UpdateForce(particle, dt);
         }
     }
-
-    private static readonly List<Pair> Registry;
+    private static readonly List<ForceGeneratorParticlePair> Registry;
 
     static ForceManager()
     {
-        Registry = new List<Pair>();
+        Registry = new List<ForceGeneratorParticlePair>();
     }
 
     public static void FixedUpdate(float dt)
     {
-        foreach (Pair pair in Registry)
+        for (int i = Registry.Count - 1; i >= 0; i--)
         {
+            ForceGeneratorParticlePair pair = Registry[i];
             if (pair.forceGenerator == null || pair.particle == null)
             {
                 Remove(pair);
@@ -41,13 +38,13 @@ public static class ForceManager
             }
 
             if (pair.forceGenerator.isOn)
-                pair.Update(dt);
+                pair.UpdateForce(dt);
         }
     }
 
     public static void Add(ForceGenerator2D forceGenerator, Particle2D particle)
     {
-        Registry.Add(new Pair(forceGenerator, particle));
+        Registry.Add(new ForceGeneratorParticlePair(forceGenerator, particle));
     }
 
     public static void Remove(ForceGenerator2D forceGenerator)
@@ -68,7 +65,7 @@ public static class ForceManager
         }
     }
 
-    internal static void Remove(Pair pair)
+    internal static void Remove(ForceGeneratorParticlePair pair)
     {
         Registry.Remove(pair);
     }

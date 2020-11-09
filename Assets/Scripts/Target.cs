@@ -8,26 +8,26 @@ public class Target : MonoBehaviour
     private Particle2D _particle;
 
     public float radius;
+    public Vector3 acceleration;
+
+    [Header("Spawning variables")]
     public Vector3 bottomLeft;
     public Vector3 upperRight;
-
-    public PointForceGenerator attractor;
 
     void Awake()
     {
         _particle = GetComponent<Particle2D>();
-        attractor = new PointForceGenerator(transform.position, 20, 10);
     }
 
     // Start is called before the first frame update
     void Start()
     {
         MoveTarget();
-        ForceManager.Add(new DirectionalForceGenerator(Vector3.down * 2), _particle);
-        ForceManager.Add(new BuoyancyForceGenerator(1f, 10, 0), _particle);
+        _particle.acceleration = acceleration;
+        ForceManager.Add(new BuoyancyForceGenerator(radius, Mathf.PI * radius * radius, -0f, 0.3f), _particle);
     }
 
-    // Update is called once per frame
+    // UpdateForce is called once per frame
     void Update()
     {
         foreach (Particle2D particle in Integrator.Particles)
@@ -53,7 +53,7 @@ public class Target : MonoBehaviour
             Mathf.Lerp(bottomLeft.y, upperRight.y, Random.Range(0f, 1f)),
             Mathf.Lerp(bottomLeft.z, upperRight.z, Random.Range(0f, 1f)));
 
-        attractor.point = pos;
+        _particle.velocity = Vector3.zero;
         transform.position = pos;
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Particle2D))]
 public class Projectile : MonoBehaviour
 {
     public float speed;
@@ -14,7 +13,6 @@ public class Projectile : MonoBehaviour
         Particle2D particle = GetComponent<Particle2D>();
         particle.velocity = transform.right * speed;
         particle.acceleration = acceleration;
-
-        ForceManager.Add(FindObjectOfType<Target>().attractor, particle);
+        Destroy(this);
     }
 }

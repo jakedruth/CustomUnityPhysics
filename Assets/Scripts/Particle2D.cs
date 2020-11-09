@@ -16,7 +16,7 @@ public class Particle2D : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if (mass != 0)
+        if (mass > 0)
             inverseMass = 1 / mass;
         else
             inverseMass = float.PositiveInfinity;

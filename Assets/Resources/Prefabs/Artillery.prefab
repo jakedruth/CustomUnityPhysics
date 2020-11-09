@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5434116292795962956}
   - component: {fileID: 5434116292795962957}
   m_Layer: 0
-  m_Name: Cannon
+  m_Name: Artillery
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -120,7 +120,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 00b237bf7b26d2947815ce9d6bec54c4, type: 2}
+  - {fileID: 2100000, guid: f18df87894578934cb985a592f8aa475, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
