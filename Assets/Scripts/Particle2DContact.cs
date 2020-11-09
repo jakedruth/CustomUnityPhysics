@@ -49,12 +49,31 @@ public class Particle2DContact
         }
 
         // Calculate the new separating velocity.
-        float newSepVelocity = -separatingVelocity * restitution;
-        float deltaVelocity = newSepVelocity - separatingVelocity;
+        float newSeparatingVelocity = -separatingVelocity * restitution;
+
+        // Check the velocity buildup due to acceleration only
+        Vector3 accCausedVelocity = particleA.acceleration;
+        if (particleB != null)
+        {
+            accCausedVelocity -= particleB.acceleration;
+        }
+        float accCausedSeparationVelocity = Vector3.Dot(accCausedVelocity, contactNormal) * dt;
+
+        // if we've got a closing velocity due to acceleration buildup,
+        // remove it from the new separating velocity
+        if (accCausedSeparationVelocity < 0)
+        {
+            newSeparatingVelocity += restitution * accCausedSeparationVelocity;
+
+            // Make sure we haven't removed more than was there to remove
+            if (newSeparatingVelocity < 0)
+                newSeparatingVelocity = 0;
+        }
+
+        float deltaVelocity = newSeparatingVelocity - separatingVelocity;
         
-        // We apply the change in velocity to each object in proportion to
-        // their inverse mass (i.e., those with lower inverse mass [higher
-        // actual mass] get less change in velocity).
+        // Apply the change in velocity to each object in proportion to their inverse mass
+        // (i.e., those with lower inverse mass [higher actual mass] get less change in velocity).
         float totalInverseMass = particleA.inverseMass;
         if (particleB != null)
             totalInverseMass += particleB.inverseMass;
