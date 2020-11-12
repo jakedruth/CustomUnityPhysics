@@ -5,34 +5,10 @@ using UnityEngine;
 
 public static class Integrator
 {
-    public static readonly List<Particle2D> Particles;
-
     static Integrator()
-    {
-        Particles = new List<Particle2D>();
-    }
+    { }
 
-    public static void FixedUpdate(float dt)
-    {
-        Integrate(dt);
-    }
-
-    private static void Integrate(float dt)
-    {
-        for (int i = 0; i < Particles.Count; i++)
-        {
-            Particle2D particle = Particles[i];
-            if (particle != null)
-                Integrate(particle, dt);
-            else
-            {
-                Particles.RemoveAt(i);
-                i--;
-            }
-        }
-    }
-
-    private static void Integrate(Particle2D particle, float dt)
+    public static void Integrate(Particle2D particle, float dt)
     {
         if (particle.inverseMass <= 0) // Immovable Object
             return;
@@ -58,16 +34,6 @@ public static class Integrator
 
         // clear accumulated forces
         particle.accumulatedForces = Vector3.zero;
-    }
-
-    public static void AddParticle(Particle2D particle)
-    {
-        Particles.Add(particle);
-    }
-
-    public static bool RemoveParticle(Particle2D particle)
-    {
-        return Particles.Remove(particle);
     }
 
     public static void AddForce(Particle2D particle, Vector3 force)

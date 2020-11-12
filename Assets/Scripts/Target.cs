@@ -30,7 +30,8 @@ public class Target : MonoBehaviour
     // UpdateForce is called once per frame
     void Update()
     {
-        foreach (Particle2D particle in Integrator.Particles)
+        // TODO: Update when implementing a particle manager
+        foreach (Particle2D particle in FindObjectsOfType<Particle2D>())
         {
             if (particle.gameObject == gameObject) 
                 continue;

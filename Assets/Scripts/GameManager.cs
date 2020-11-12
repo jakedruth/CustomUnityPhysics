@@ -42,7 +42,6 @@ public class GameManager : MonoBehaviour
     void FixedUpdate()
     {
         ForceManager.FixedUpdate(Time.deltaTime);
-        Integrator.FixedUpdate(Time.deltaTime);
     }
 
     void OnGUI()

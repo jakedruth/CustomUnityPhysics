@@ -20,8 +20,6 @@ public class Particle2D : MonoBehaviour
             inverseMass = 1 / mass;
         else
             inverseMass = float.PositiveInfinity;
-
-        Integrator.AddParticle(this);
     }
 
     void Update()
@@ -33,9 +31,13 @@ public class Particle2D : MonoBehaviour
         }
     }
 
+    void FixedUpdate()
+    {
+        Integrator.Integrate(this, Time.deltaTime);
+    }
+
     void OnDestroy()
     {
-        Integrator.RemoveParticle(this);
         ForceManager.Remove(this);
     }
 

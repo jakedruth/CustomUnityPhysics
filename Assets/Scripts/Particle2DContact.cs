@@ -20,13 +20,13 @@ public class Particle2DContact
         this.restitution = restitution;
     }
 
-    protected void Resolve(float dt)
+    public void Resolve(float dt)
     {
         ResolveVelocity(dt);
         ResolveInterpenetration(dt);
     }
 
-    protected float CalculateSeparatingVelocity()
+    public float CalculateSeparatingVelocity()
     {
         Vector3 relativeVelocity = particleA.velocity;
         if (particleB != null)
@@ -103,7 +103,8 @@ public class Particle2DContact
     private void ResolveInterpenetration(float dt)
     {
         // If we don’t have any penetration, skip this step.
-        if (penetration <= 0) return;
+        if (penetration <= 0) 
+            return;
         
         // The movement of each object is based on their inverse mass,
         // so total that.
