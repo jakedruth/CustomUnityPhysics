@@ -1,18 +1,28 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
+    private ParticleManager _particleManager;
+
     private int _score;
+    public float startTime;
+    private float _timer;
+    private Cannon _cannon;
+
+    public static ParticleManager ParticleManager
+    {
+        get { return instance._particleManager; }
+    }
+
     public static int Score
     {
         get { return instance._score; }
         set { instance._score = value; }
     }
 
-    public float startTime;
-    private float _timer;
     public static float Timer
     {
         get { return instance._timer; }
@@ -30,8 +40,10 @@ public class GameManager : MonoBehaviour
         instance = this;
         DontDestroyOnLoad(gameObject);
 
-        Score = 0;
-        Timer = startTime;
+        _particleManager = new ParticleManager(int.MaxValue, int.MaxValue);
+        _score = 0;
+        _timer = startTime;
+        _cannon = FindObjectOfType<Cannon>();
     }
 
     void Update()
@@ -41,6 +53,7 @@ public class GameManager : MonoBehaviour
 
     void FixedUpdate()
     {
+        ParticleManager.FixedUpdate(Time.deltaTime);
         ForceManager.FixedUpdate(Time.deltaTime);
     }
 
@@ -51,7 +64,8 @@ public class GameManager : MonoBehaviour
         Vector2 padding = new Vector2(5, 3);
 
         string text = $"Time: {Timer:F0}\n" +
-                      $"Score: {Score}";
+                      $"Score: {Score}\n" +
+                      $"Current Projectile: {_cannon.GetCurrentProjectileName()}";
 
         GUIContent content = new GUIContent(text);
         GUIStyle style = new GUIStyle(GUI.skin.box) {alignment = TextAnchor.UpperLeft, contentOffset = Vector2.one * padding};

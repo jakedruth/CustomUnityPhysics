@@ -24,6 +24,8 @@ public class SpringProjectile : MonoBehaviour
             particles[i].transform.SetParent(null);
         }
 
+
+
         Destroy(this);
     }
 }

@@ -13,12 +13,6 @@ public class Particle2DContact
     public Vector3 particleMovementA;
     public Vector3 particleMovementB;
 
-    public Particle2DContact(Particle2D particleA, Particle2D particleB, float restitution)
-    {
-        this.particleA = particleA;
-        this.particleB = particleB;
-        this.restitution = restitution;
-    }
 
     public void Resolve(float dt)
     {

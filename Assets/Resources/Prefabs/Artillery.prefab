@@ -60,8 +60,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc99f22f150e505428bd2d9bab055038, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 5
-  acceleration: {x: 0, y: -3, z: 0}
+  speed: 8
+  acceleration: {x: 0, y: -5, z: 0}
 --- !u!1 &5434116292819784340
 GameObject:
   m_ObjectHideFlags: 0

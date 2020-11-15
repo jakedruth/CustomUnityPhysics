@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public static class ContactResolver
 {
-    public static int iterations;
+    private static int iterations;
     public static int iterationsUsed;
 
     public static void SetIterations(int iterationCount)
@@ -33,6 +31,34 @@ public static class ContactResolver
                 break;
 
             contacts[maxIndex].Resolve(dt);
+
+            Vector3 moveA = contacts[maxIndex].particleMovementA;
+            Vector3 moveB = contacts[maxIndex].particleMovementB;
+
+            for (int i = 0; i < contacts.Length; i++)
+            {
+                if (contacts[i].particleA == contacts[maxIndex].particleA)
+                {
+                    contacts[i].penetration -= Vector3.Dot(moveA, contacts[i].contactNormal);
+                }
+                else if (contacts[i].particleA == contacts[maxIndex].particleB)
+                {
+                    contacts[i].penetration -= Vector3.Dot(moveB, contacts[i].contactNormal);
+                }
+
+                if (contacts[maxIndex].particleB == null)
+                    continue;
+
+                if (contacts[i].particleB == contacts[maxIndex].particleA)
+                {
+                    contacts[i].penetration += Vector3.Dot(moveA, contacts[i].contactNormal);
+                }
+                else if (contacts[i].particleB == contacts[maxIndex].particleB)
+                {
+                    contacts[i].penetration += Vector3.Dot(moveB, contacts[i].contactNormal);
+                }
+            }
+
             iterationsUsed++;
         }
     }

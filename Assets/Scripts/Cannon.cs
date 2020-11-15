@@ -41,4 +41,9 @@ public class Cannon : MonoBehaviour
 
         projectile.name = "Projectile";
     }
+
+    public string GetCurrentProjectileName()
+    {
+        return projectiles[_projectileIndex].name;
+    }
 }

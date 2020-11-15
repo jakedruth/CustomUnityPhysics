@@ -13,32 +13,17 @@ public class Particle2D : MonoBehaviour
     [Range(0, 1)]
     public float dampingConstant = 0.999f;
 
-    // Start is called before the first frame update
     void Start()
     {
-        if (mass > 0)
-            inverseMass = 1 / mass;
-        else
-            inverseMass = float.PositiveInfinity;
-    }
 
-    void Update()
-    {
-        const float killZone = -10;
-        if (transform.position.y <= killZone)
-        {
-            Destroy(gameObject);
-        }
-    }
-
-    void FixedUpdate()
-    {
-        Integrator.Integrate(this, Time.deltaTime);
+        inverseMass = mass > 0 ? 1 / mass : float.PositiveInfinity;
+        GameManager.ParticleManager.particles.Add(this);
     }
 
     void OnDestroy()
     {
         ForceManager.Remove(this);
+        GameManager.ParticleManager.particles.Remove(this);
     }
 
     public void AddForce(Vector3 force)
