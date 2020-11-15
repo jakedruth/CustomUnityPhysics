@@ -15,7 +15,6 @@ public class Particle2D : MonoBehaviour
 
     void Start()
     {
-
         inverseMass = mass > 0 ? 1 / mass : float.PositiveInfinity;
         GameManager.ParticleManager.particles.Add(this);
     }
