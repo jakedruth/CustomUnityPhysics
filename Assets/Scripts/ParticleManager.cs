@@ -24,9 +24,40 @@ public class ParticleManager
         ForceManager.FixedUpdate(dt);
 
         // Integrate particles
-        for (int i = 0; i < particles.Count; i++)
+        for (int i = particles.Count - 1; i >= 0; i--)
         {
             Integrator.Integrate(particles[i], dt);
+        }
+
+        // Detect if 2 Particles are colliding
+        for (int i = particles.Count - 1; i >= 0; i--)
+        {
+            // Check if particle is Target
+            if (particles[i].tag == "Target")
+                continue;
+
+            // Check if particle is below Y Kill zone
+            if (particles[i].transform.position.y <= -10)
+            {
+                Object.Destroy(particles[i].gameObject);
+                continue;
+            }
+
+            for (int j = particles.Count - 1; j > i; j--)
+            {
+                if (i == j)
+                    continue;
+
+                // Check if particle is Target
+                if (particles[j].tag == "Target")
+                    continue;
+
+                if (CollisionDetector.DetectCollision(particles[i], particles[j]))
+                {
+                    Object.Destroy(particles[i].gameObject);
+                    Object.Destroy(particles[j].gameObject);
+                }
+            }
         }
 
         Particle2DContact[] contacts = GenerateContacts();

@@ -47,6 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ignoreForces: 0
   mass: 10
+  radius: 0.15
   dampingConstant: 0.999
 --- !u!114 &2838988808740212940
 MonoBehaviour:
@@ -188,6 +189,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ignoreForces: 0
   mass: 1
+  radius: 0.125
   dampingConstant: 0.999
 --- !u!114 &2838988810058319823
 MonoBehaviour:

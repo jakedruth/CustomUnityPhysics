@@ -47,6 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ignoreForces: 0
   mass: 1
+  radius: 0.125
   dampingConstant: 0.999
 --- !u!114 &5434116292795962957
 MonoBehaviour:
@@ -61,7 +62,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 12
-  radius: 0.25
   acceleration: {x: 0, y: -3, z: 0}
 --- !u!1 &5434116292819784340
 GameObject:

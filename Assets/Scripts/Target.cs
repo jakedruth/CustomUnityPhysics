@@ -6,8 +6,6 @@ using UnityEngine;
 public class Target : MonoBehaviour
 {
     private Particle2D _particle;
-
-    public float radius;
     public Vector3 acceleration;
 
     [Header("Spawning variables")]
@@ -24,22 +22,20 @@ public class Target : MonoBehaviour
     {
         MoveTarget();
         _particle.acceleration = acceleration;
-        ForceManager.Add(new BuoyancyForceGenerator(radius, Mathf.PI * radius * radius, -0f, 0.3f), _particle);
+        ForceManager.Add(new BuoyancyForceGenerator(_particle.radius, Mathf.PI * _particle.radius * _particle.radius, -0f, 0.3f), _particle);
     }
 
     // UpdateForce is called once per frame
     void Update()
     {
-        // TODO: Update when implementing a particle manager
-        foreach (Particle2D particle in FindObjectsOfType<Particle2D>())
+        foreach (Particle2D other in GameManager.ParticleManager.particles)
         {
-            if (particle.gameObject == gameObject) 
+            if (other.gameObject == gameObject)
                 continue;
 
-            Vector3 displacement = particle.transform.position - transform.position;
-            if (displacement.sqrMagnitude <= radius * radius)
+            if (CollisionDetector.DetectCollision(_particle, other))
             {
-                Destroy(particle.gameObject);
+                Destroy(other.gameObject);
                 MoveTarget();
                 GameManager.Score += 1;
                 break;

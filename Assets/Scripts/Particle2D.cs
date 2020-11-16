@@ -6,6 +6,7 @@ public class Particle2D : MonoBehaviour
 {
     public bool ignoreForces;
     public float mass = 1;
+    public float radius = 1;
     internal float inverseMass;
     internal Vector3 velocity;
     internal Vector3 acceleration;

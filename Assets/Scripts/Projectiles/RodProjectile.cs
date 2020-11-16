@@ -17,5 +17,7 @@ public class RodProjectile : MonoBehaviour
         particles[1].transform.SetParent(null);
 
         GameManager.ParticleManager.contactGenerators.Add(rod);
+
+        Destroy(gameObject);
     }
 }
