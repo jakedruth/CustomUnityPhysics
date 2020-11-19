@@ -36,6 +36,7 @@ public class ParticleManager
             if (particles[i].tag == "Target")
                 continue;
 
+
             // Check if particle is below Y Kill zone
             if (particles[i].transform.position.y <= -10)
             {
