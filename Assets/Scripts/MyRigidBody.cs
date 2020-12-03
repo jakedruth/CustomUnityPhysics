@@ -12,6 +12,9 @@ public class MyRigidBody : MonoBehaviour
     [Range(0, 1)] public float linearDamping = 0.999f;
     [Range(0, 1)] public float angularDamping = 0.999f;
 
+    internal Matrix3X3 inverseInertiaTensor = new Matrix3X3();
+    internal Matrix3X3 inverseInertiaTensorWorld = new Matrix3X3();
+
     internal Vector3 velocity;
     internal Vector3 acceleration;
     private Vector3 _prevAcceleration;
@@ -22,9 +25,18 @@ public class MyRigidBody : MonoBehaviour
     private Vector3 _accumulatedTorque;
     internal bool isAwake;
 
+    // TODO: Remove this
+    private AnchoredSpringFG spring;
+    private GravityFG gravity;
+
     void Awake()
     {
         InitMassValues();
+        CalculateDerivedData();
+        SetInertiaTensor(MyPhysics.GetInertiaTensorSphere(mass, 0.5f));
+        
+        spring = new AnchoredSpringFG(new Vector3(0, 3, 0), new Vector3(0, 0.5f, 0), 5, 1);
+        gravity = new GravityFG(Vector3.down * 2);
     }
 
     private void OnValidate()
@@ -39,15 +51,24 @@ public class MyRigidBody : MonoBehaviour
         inverseMass = mass > 0 ? 1 / mass : float.PositiveInfinity;
     }
 
+    void FixedUpdate()
+    {
+        gravity.UpdateForce(this, Time.deltaTime);
+        spring.UpdateForce(this, Time.deltaTime);
+
+        Debug.DrawLine(spring.anchor, transform.TransformPoint(spring.connectionPoint), Color.red, Time.deltaTime, false);
+        Debug.DrawRay(transform.position, transform.up, Color.green, Time.deltaTime, false);
+        Integrate(Time.deltaTime);
+    }
+
     public void Integrate(float dt)
     {
         // Calculate Linear Acceleration from force inputs
         _prevAcceleration = acceleration;
         _prevAcceleration += _accumulatedForces * inverseMass;
 
-        // TODO: this
         // Calculate angluar acceleation from torque inputs
-        Vector3 angularAcceleration = Vector3.zero;
+        Vector3 angularAcceleration = inverseInertiaTensorWorld.Transform(_accumulatedTorque);
 
         // Update linear velocity
         velocity += _prevAcceleration * dt;
@@ -61,30 +82,30 @@ public class MyRigidBody : MonoBehaviour
 
         // Adjust position
         transform.position += velocity * dt;
-        
-        Quaternion rot = transform.rotation;
-        Quaternion q = new Quaternion(0, 
-            angularVelocity.x * dt, 
-            angularVelocity.y * dt, 
-            angularVelocity.z * dt);
-        
-        q *= rot;
 
-        rot.x += q.x * 0.5f;
-        rot.y += q.y * 0.5f;
-        rot.z += q.z * 0.5f;
-        rot.w += q.w * 0.5f;
-
-        transform.rotation = rot; // HOLY FUCK IDK WHAT I JUST DID???
+        transform.rotation *= Quaternion.Euler(angularVelocity);
 
         CalculateDerivedData();
 
         ClearAccumulators();
     }
 
+    public void SetInertiaTensor(Matrix3X3 inertiaTensor)
+    {
+        inverseInertiaTensor.SetInverse(inertiaTensor);
+    }
+
     private void CalculateDerivedData()
     {
-        throw new NotImplementedException();
+        transform.rotation.Normalize();
+        
+        // Calculate the inertiaTensor in world space
+
+        // TODO: this function
+        //TransformInertiaTensor(inverseInertiaTensor);
+
+        inverseInertiaTensorWorld = inverseInertiaTensor;
+        inverseInertiaTensorWorld.SetOrientation(transform.rotation);
     }
 
     public void AddForce(Vector3 force)
@@ -114,10 +135,14 @@ public class MyRigidBody : MonoBehaviour
     {
         _accumulatedForces = Vector3.zero;
         _accumulatedTorque = Vector3.zero;
+
+        Matrix3X3 m = new Matrix3X3();
     }
 
-    public static void TransformInertiaTensor(ref Matrix4x4 iitWorld, Quaternion q, Matrix4x4 iitBody, Matrix4x4 rotmat)
+    private static void TransformInertiaTensor(ref Matrix3X3 iitWorld, Quaternion q, Matrix3X3 iitBody, Matrix4x4 rotmat)
     {
+
+
         throw new NotImplementedException();
     }
 }

@@ -165,3 +165,31 @@ public class SpringFG : ForceGenerator
         body.AddForceAtPoint(force, lws);
     }
 }
+
+public class AnchoredSpringFG : ForceGenerator
+{
+    public Vector3 anchor;
+    public Vector3 connectionPoint;
+    public float springConstant;
+    public float restLength;
+
+    public AnchoredSpringFG(Vector3 anchor, Vector3 connectionPoint, float springConstant, float restLength)
+    {
+        this.anchor = anchor;
+        this.connectionPoint = connectionPoint;
+        this.springConstant = springConstant;
+        this.restLength = restLength;
+    }
+
+    public override void UpdateForce(MyRigidBody body, float dt)
+    {
+        Vector3 lws = body.transform.TransformPoint(connectionPoint);
+
+        Vector3 displacement = lws - anchor;
+        float distance = displacement.magnitude;
+        Vector3 dir = displacement / distance;
+
+        float magnitude = (restLength - distance) * springConstant;
+        body.AddForceAtPoint(dir * magnitude, lws);
+    }
+}
