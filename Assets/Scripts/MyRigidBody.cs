@@ -25,18 +25,11 @@ public class MyRigidBody : MonoBehaviour
     private Vector3 _accumulatedTorque;
     internal bool isAwake;
 
-    // TODO: Remove this
-    private AnchoredSpringFG spring;
-    private GravityFG gravity;
-
     void Awake()
     {
         InitMassValues();
         CalculateDerivedData();
         SetInertiaTensor(MyPhysics.GetInertiaTensorSphere(mass, 0.5f));
-        
-        spring = new AnchoredSpringFG(new Vector3(0, 3, 0), new Vector3(0, 0.5f, 0), 5, 1);
-        gravity = new GravityFG(Vector3.down * 2);
     }
 
     private void OnValidate()
@@ -53,11 +46,6 @@ public class MyRigidBody : MonoBehaviour
 
     void FixedUpdate()
     {
-        gravity.UpdateForce(this, Time.deltaTime);
-        spring.UpdateForce(this, Time.deltaTime);
-
-        Debug.DrawLine(spring.anchor, transform.TransformPoint(spring.connectionPoint), Color.red, Time.deltaTime, false);
-        Debug.DrawRay(transform.position, transform.up, Color.green, Time.deltaTime, false);
         Integrate(Time.deltaTime);
     }
 

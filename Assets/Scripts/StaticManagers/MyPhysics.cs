@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Xml.Schema;
 using UnityEngine;
 
 public static class MyPhysics
 {
-    public static void Test()
-    {
-
-    }
-
     /// <summary>
     /// Get the inertia tensor of any rectangular six-sided object, where the object has constant density
     /// </summary>
