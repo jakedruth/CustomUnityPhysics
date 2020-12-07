@@ -7,7 +7,7 @@ public class PlayerInput : MonoBehaviour
 {
     private GolfBall _golfBall;
     public float maxDistance;
-    public float force;
+    public float maxForce;
     private bool _canSwing;
     private bool _beginSwing;
 
@@ -24,8 +24,9 @@ public class PlayerInput : MonoBehaviour
 
     void Update()
     {
+        Vector3 pos = transform.position + Vector3.down * 0.5f;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Plane plane = new Plane(Vector3.up, transform.position);
+        Plane plane = new Plane(Vector3.up, pos);
         if (!plane.Raycast(ray, out float enter)) 
             return;
 
@@ -40,15 +41,14 @@ public class PlayerInput : MonoBehaviour
 
             if (_beginSwing)
             {
-                Vector3 displacement = point - transform.position;
-
+                Vector3 displacement = point - pos;
                 float powerLevel = Mathf.Clamp01(displacement.magnitude / maxDistance);
                 HUDController.SetPowerLevel(powerLevel);
 
                 if (Input.GetMouseButtonUp(0))
                 {
                     Vector3 direction = displacement.normalized;
-                    _golfBall.ApplyForce(direction * force * powerLevel);
+                    _golfBall.ApplyForce(direction * maxForce * powerLevel);
                     _beginSwing = false;
                 }
             }

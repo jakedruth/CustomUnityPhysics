@@ -51,7 +51,7 @@ public class MyRigidBody : MonoBehaviour
 
     public void Integrate(float dt)
     {
-        // Calculate Linear Acceleration from force inputs
+        // Calculate Linear Acceleration from maxForce inputs
         _prevAcceleration = acceleration;
         _prevAcceleration += _accumulatedForces * inverseMass;
 
