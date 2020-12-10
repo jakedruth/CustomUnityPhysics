@@ -4,32 +4,25 @@ using UnityEngine;
 
 public class WorldManager
 {
-    public static WorldManager instance;
-    private readonly List<MyRigidBody> _bodies;
+    internal static readonly List<MyRigidBody> Bodies;
 
-    public WorldManager()
+    static WorldManager()
     {
-        instance = this;
-        _bodies = new List<MyRigidBody>();
+        Bodies = new List<MyRigidBody>();
     }
 
-    public void RunPhysics(float dt)
+    public static void RunPhysics(float dt)
     {
         ForceRegistry.FixedUpdate(dt);
         Integrate(dt);
     }
 
-    private void Integrate(float dt)
+    private static void Integrate(float dt)
     {
         ForceManager.FixedUpdate(dt);
-        for (int i = 0; i > _bodies.Count; i++)
+        for (int i = 0; i < Bodies.Count; i++)
         {
-            _bodies[i].Integrate(dt);
+            Bodies[i].Integrate(dt);
         }
-    }
-
-    public static void AddMyRigidBody(MyRigidBody body)
-    {
-        instance._bodies.Add(body);
     }
 }

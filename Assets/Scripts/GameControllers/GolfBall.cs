@@ -8,16 +8,11 @@ public class GolfBall : MonoBehaviour
     //private Rigidbody _rigidbody;
     private MyRigidBody _myRigidBody;
 
-
     void Awake()
     {
         //_rigidbody = GetComponent<Rigidbody>();
         _myRigidBody = GetComponent<MyRigidBody>();
-    }
-
-    void FixedUpdate()
-    {
-
+        _myRigidBody.SetInertiaTensor(MyPhysics.GetInertiaTensorSphere(_myRigidBody.mass, 0.5f));
     }
 
     public void ApplyForce(Vector3 force)
@@ -25,13 +20,4 @@ public class GolfBall : MonoBehaviour
         //_rigidbody.AddForce(maxForce);
         _myRigidBody.AddForceAtPoint(force, transform.position + Vector3.up);
     }
-
-    private void OnDrawGizmos()
-    {
-#if UNITY_EDITOR
-        Handles.PositionHandle(transform.position, transform.rotation);
-#endif
-    }
-
-
 }

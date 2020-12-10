@@ -5,12 +5,12 @@ using System.Collections;
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
-    private ParticleManager _particleManager;
+    //private ParticleManager _particleManager;
 
-    public static ParticleManager ParticleManager
-    {
-        get { return instance._particleManager; }
-    }
+    //public static ParticleManager ParticleManager
+    //{
+    //    get { return instance._particleManager; }
+    //}
 
     void Awake()
     {
@@ -23,11 +23,12 @@ public class GameManager : MonoBehaviour
         instance = this;
         DontDestroyOnLoad(gameObject);
 
-        _particleManager = new ParticleManager(int.MaxValue, int.MaxValue);
+        //_particleManager = new ParticleManager(int.MaxValue, int.MaxValue);
     }
 
     void FixedUpdate()
     {
-        ParticleManager.FixedUpdate(Time.deltaTime);
+        //ParticleManager.RunPhysics(Time.deltaTime);
+        WorldManager.RunPhysics(Time.deltaTime);
     }
 }

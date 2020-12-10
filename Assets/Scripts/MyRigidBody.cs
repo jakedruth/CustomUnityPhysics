@@ -15,11 +15,11 @@ public class MyRigidBody : MonoBehaviour
     internal Matrix3X3 inverseInertiaTensor = new Matrix3X3();
     internal Matrix3X3 inverseInertiaTensorWorld = new Matrix3X3();
 
-    internal Vector3 velocity;
-    internal Vector3 acceleration;
-    private Vector3 _prevAcceleration;
+    internal Vector3 velocity = Vector3.zero;
+    internal Vector3 acceleration = Vector3.zero;
+    private Vector3 _prevAcceleration = Vector3.zero;
 
-    internal Vector3 angularVelocity;
+    internal Vector3 angularVelocity = Vector3.zero;
 
     private Vector3 _accumulatedForces;
     private Vector3 _accumulatedTorque;
@@ -29,7 +29,12 @@ public class MyRigidBody : MonoBehaviour
     {
         InitMassValues();
         CalculateDerivedData();
-        SetInertiaTensor(MyPhysics.GetInertiaTensorSphere(mass, 0.5f));
+        WorldManager.Bodies.Add(this);
+    }
+
+    void OnDestroy()
+    {
+        WorldManager.Bodies.Remove(this);
     }
 
     private void OnValidate()
@@ -46,7 +51,7 @@ public class MyRigidBody : MonoBehaviour
 
     void FixedUpdate()
     {
-        Integrate(Time.deltaTime);
+        //Integrate(Time.deltaTime);
     }
 
     public void Integrate(float dt)
@@ -88,10 +93,6 @@ public class MyRigidBody : MonoBehaviour
         transform.rotation.Normalize();
         
         // Calculate the inertiaTensor in world space
-
-        // TODO: this function
-        //TransformInertiaTensor(inverseInertiaTensor);
-
         inverseInertiaTensorWorld = inverseInertiaTensor;
         inverseInertiaTensorWorld.SetOrientation(transform.rotation);
     }
@@ -125,12 +126,5 @@ public class MyRigidBody : MonoBehaviour
         _accumulatedTorque = Vector3.zero;
 
         Matrix3X3 m = new Matrix3X3();
-    }
-
-    private static void TransformInertiaTensor(ref Matrix3X3 iitWorld, Quaternion q, Matrix3X3 iitBody, Matrix4x4 rotmat)
-    {
-
-
-        throw new NotImplementedException();
     }
 }

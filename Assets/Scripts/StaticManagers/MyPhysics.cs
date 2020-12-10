@@ -5,6 +5,14 @@ using UnityEngine;
 
 public static class MyPhysics
 {
+
+    public static (Vector3 direction, float magnitude) GetDirectionAndMagnitude(this Vector3 vector)
+    {
+        float magnitude = vector.magnitude;
+        Vector3 direction = vector / magnitude;
+        return (direction, magnitude);
+    }
+
     /// <summary>
     /// Get the inertia tensor of any rectangular six-sided object, where the object has constant density
     /// </summary>

@@ -7,7 +7,6 @@ public class HUDController : MonoBehaviour
 {
     public static HUDController instance;
     public Transform powerLevelTransform;
-    public Gradient powerLevelColorGradient;
 
     void Awake()
     {
@@ -20,10 +19,10 @@ public class HUDController : MonoBehaviour
         instance = this;
     }
 
-    public static void SetPowerLevel(float t)
+    public static void SetPowerLevel(float t, Color color)
     {
         instance.powerLevelTransform.localScale = new Vector3(t, 1, 1);
-        instance.powerLevelTransform.GetComponent<Image>().color = instance.powerLevelColorGradient.Evaluate(t);
+        instance.powerLevelTransform.GetComponent<Image>().color = color;
     }
 
 }
