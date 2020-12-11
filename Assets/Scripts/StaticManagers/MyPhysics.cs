@@ -5,7 +5,6 @@ using UnityEngine;
 
 public static class MyPhysics
 {
-
     public static (Vector3 direction, float magnitude) GetDirectionAndMagnitude(this Vector3 vector)
     {
         float magnitude = vector.magnitude;
@@ -84,22 +83,22 @@ public static class MyPhysics
 
 public class Matrix3X3
 {
-    private readonly float[] _mat = new float[9];
+    private readonly float[] _data = new float[9];
 
     public Matrix3X3()
     { }
 
     public Matrix3X3(float a, float b, float c, float d, float e, float f, float g, float h, float i)
     {
-        _mat[0] = a;
-        _mat[1] = b;
-        _mat[2] = c;
-        _mat[3] = d;
-        _mat[4] = e;
-        _mat[5] = f;
-        _mat[6] = g;
-        _mat[7] = h;
-        _mat[8] = i;
+        _data[0] = a;
+        _data[1] = b;
+        _data[2] = c;
+        _data[3] = d;
+        _data[4] = e;
+        _data[5] = f;
+        _data[6] = g;
+        _data[7] = h;
+        _data[8] = i;
     }
 
     public static Vector3 operator *(Matrix3X3 m, Vector3 v)
@@ -153,15 +152,15 @@ public class Matrix3X3
             return this;
 
         float inverseDeterminant = 1.0f / determinant;
-        _mat[0] = +(m[4] * m[8] - m[5] * m[7]) * inverseDeterminant;
-        _mat[1] = -(m[1] * m[8] - m[2] * m[7]) * inverseDeterminant;
-        _mat[2] = +(m[1] * m[5] - m[2] * m[4]) * inverseDeterminant;
-        _mat[3] = -(m[3] * m[8] - m[5] * m[6]) * inverseDeterminant;
-        _mat[4] = +(m[0] * m[8] - t6) * inverseDeterminant;
-        _mat[5] = -(t2 - t4) * inverseDeterminant;
-        _mat[6] = +(m[3] * m[7] - m[4] * m[6]) * inverseDeterminant;
-        _mat[7] = -(m[0] * m[7] - t5) * inverseDeterminant;
-        _mat[8] = (t1 - t3) * inverseDeterminant;
+        _data[0] = +(m[4] * m[8] - m[5] * m[7]) * inverseDeterminant;
+        _data[1] = -(m[1] * m[8] - m[2] * m[7]) * inverseDeterminant;
+        _data[2] = +(m[1] * m[5] - m[2] * m[4]) * inverseDeterminant;
+        _data[3] = -(m[3] * m[8] - m[5] * m[6]) * inverseDeterminant;
+        _data[4] = +(m[0] * m[8] - t6) * inverseDeterminant;
+        _data[5] = -(t2 - t4) * inverseDeterminant;
+        _data[6] = +(m[3] * m[7] - m[4] * m[6]) * inverseDeterminant;
+        _data[7] = -(m[0] * m[7] - t5) * inverseDeterminant;
+        _data[8] = (t1 - t3) * inverseDeterminant;
 
         return this;
     }
@@ -178,15 +177,15 @@ public class Matrix3X3
 
     public Matrix3X3 SetTranspose(Matrix3X3 m)
     {
-        _mat[0] = m[0];
-        _mat[1] = m[3];
-        _mat[2] = m[6];
-        _mat[3] = m[1];
-        _mat[4] = m[4];
-        _mat[5] = m[7];
-        _mat[6] = m[2];
-        _mat[7] = m[5];
-        _mat[8] = m[8];
+        _data[0] = m[0];
+        _data[1] = m[3];
+        _data[2] = m[6];
+        _data[3] = m[1];
+        _data[4] = m[4];
+        _data[5] = m[7];
+        _data[6] = m[2];
+        _data[7] = m[5];
+        _data[8] = m[8];
 
         return this;
     }
@@ -198,21 +197,26 @@ public class Matrix3X3
 
     public void SetOrientation(Quaternion q)
     {
-        _mat[0] = 1 - (2 * q.y * q.y + 2 * q.z * q.z);
-        _mat[1] = 2 * q.x * q.y + 2 * q.z * q.w;
-        _mat[2] = 2 * q.x * q.z - 2 * q.y * q.w;
-        _mat[3] = 2 * q.x * q.y - 2 * q.z * q.w;
-        _mat[4] = 1 - (2 * q.x * q.x + 2 * q.z * q.z);
-        _mat[5] = 2 * q.y * q.z + 2 * q.x * q.w;
-        _mat[6] = 2 * q.x * q.z + 2 * q.y * q.w;
-        _mat[7] = 2 * q.y * q.z - 2 * q.x * q.w;
-        _mat[8] = 1 - (2 * q.x * q.x + 2 * q.y * q.y);
+        _data[0] = 1 - (2 * q.y * q.y + 2 * q.z * q.z);
+        _data[1] = 2 * q.x * q.y + 2 * q.z * q.w;
+        _data[2] = 2 * q.x * q.z - 2 * q.y * q.w;
+        _data[3] = 2 * q.x * q.y - 2 * q.z * q.w;
+        _data[4] = 1 - (2 * q.x * q.x + 2 * q.z * q.z);
+        _data[5] = 2 * q.y * q.z + 2 * q.x * q.w;
+        _data[6] = 2 * q.x * q.z + 2 * q.y * q.w;
+        _data[7] = 2 * q.y * q.z - 2 * q.x * q.w;
+        _data[8] = 1 - (2 * q.x * q.x + 2 * q.y * q.y);
+    }
+
+    public Vector3 GetAxis(int i)
+    {
+        return new Vector3(_data[i], _data[i + 3], _data[i + 6]);
     }
 
     public float this[int index]
     {
-        get { return _mat[index]; }
-        set { _mat[index] = value; }
+        get { return _data[index]; }
+        set { _data[index] = value; }
     }
 
     public float this[int x, int y]
@@ -221,38 +225,38 @@ public class Matrix3X3
         {
             if (x < 0 || x >= 3 || y < 0 || y >= 3)
                 throw new IndexOutOfRangeException("X and Y are bounded to [0, 3)");
-            return _mat[x + y * 3];
+            return _data[x + y * 3];
         }
         set
         {
             if (x < 0 || x >= 3 || y < 0 || y >= 3)
                 throw new IndexOutOfRangeException("X and Y are bounded to [0, 3)");
-            _mat[x + y * 3] = value;
+            _data[x + y * 3] = value;
         }
     }
 }
 
 public class Matrix3X4
 {
-    private readonly float[] _mat = new float[12];
+    private readonly float[] _data = new float[12];
 
     public Matrix3X4()
     { }
 
     public Matrix3X4(float a, float b, float c, float d, float e, float f, float g, float h, float i, float j, float k, float l)
     {
-        _mat[0] = a;
-        _mat[1] = b;
-        _mat[2] = c;
-        _mat[3] = d;
-        _mat[4] = e;
-        _mat[5] = f;
-        _mat[6] = g;
-        _mat[7] = h;
-        _mat[8] = i;
-        _mat[9] = j;
-        _mat[10] = k;
-        _mat[11] = l;
+        _data[0] = a;
+        _data[1] = b;
+        _data[2] = c;
+        _data[3] = d;
+        _data[4] = e;
+        _data[5] = f;
+        _data[6] = g;
+        _data[7] = h;
+        _data[8] = i;
+        _data[9] = j;
+        _data[10] = k;
+        _data[11] = l;
     }
 
     public static Vector3 operator *(Matrix3X4 m, Vector3 v)
@@ -295,28 +299,28 @@ public class Matrix3X4
 
         float inverseDeterminant = 1 / determinant;
 
-        _mat[0] = (-m[9] * m[6] + m[5] * m[10]) * inverseDeterminant;
-        _mat[4] = (m[8] * m[6] - m[4] * m[10]) * inverseDeterminant;
-        _mat[8] = (-m[8] * m[5] + m[4] * m[9] * m[15]) * inverseDeterminant;
-        _mat[1] = (m[9] * m[2] - m[1] * m[10]) * inverseDeterminant;
-        _mat[5] = (-m[8] * m[2] + m[0] * m[10]) * inverseDeterminant;
-        _mat[9] = (m[8] * m[1] - m[0] * m[9] * m[15]) * inverseDeterminant;
-        _mat[2] = (-m[5] * m[2] + m[1] * m[6] * m[15]) * inverseDeterminant;
-        _mat[6] = (+m[4] * m[2] - m[0] * m[6] * m[15]) * inverseDeterminant;
-        _mat[10] = (-m[4] * m[1] + m[0] * m[5] * m[15]) * inverseDeterminant;
-        _mat[3] = (m[9] * m[6] * m[3]
+        _data[0] = (-m[9] * m[6] + m[5] * m[10]) * inverseDeterminant;
+        _data[4] = (m[8] * m[6] - m[4] * m[10]) * inverseDeterminant;
+        _data[8] = (-m[8] * m[5] + m[4] * m[9] * m[15]) * inverseDeterminant;
+        _data[1] = (m[9] * m[2] - m[1] * m[10]) * inverseDeterminant;
+        _data[5] = (-m[8] * m[2] + m[0] * m[10]) * inverseDeterminant;
+        _data[9] = (m[8] * m[1] - m[0] * m[9] * m[15]) * inverseDeterminant;
+        _data[2] = (-m[5] * m[2] + m[1] * m[6] * m[15]) * inverseDeterminant;
+        _data[6] = (+m[4] * m[2] - m[0] * m[6] * m[15]) * inverseDeterminant;
+        _data[10] = (-m[4] * m[1] + m[0] * m[5] * m[15]) * inverseDeterminant;
+        _data[3] = (m[9] * m[6] * m[3]
                    - m[5] * m[10] * m[3]
                    - m[9] * m[2] * m[7]
                    + m[1] * m[10] * m[7]
                    + m[5] * m[2] * m[11]
                    - m[1] * m[6] * m[11]) * inverseDeterminant;
-        _mat[7] = (-m[8] * m[6] * m[3]
+        _data[7] = (-m[8] * m[6] * m[3]
                    + m[4] * m[10] * m[3]
                    + m[8] * m[2] * m[7]
                    - m[0] * m[10] * m[7]
                    - m[4] * m[2] * m[11]
                    + m[0] * m[6] * m[11]) * inverseDeterminant;
-        _mat[11] = (m[8] * m[5] * m[3]
+        _data[11] = (m[8] * m[5] * m[3]
                     - m[4] * m[9] * m[3]
                     - m[8] * m[1] * m[7]
                     + m[0] * m[9] * m[7]
@@ -328,12 +332,12 @@ public class Matrix3X4
 
     private float GetDeterminant()
     {
-        return _mat[8] * _mat[5] * _mat[2] +
-               _mat[4] * _mat[9] * _mat[2] +
-               _mat[8] * _mat[1] * _mat[6] -
-               _mat[0] * _mat[9] * _mat[6] -
-               _mat[4] * _mat[1] * _mat[10] +
-               _mat[0] * _mat[5] * _mat[10];
+        return _data[8] * _data[5] * _data[2] +
+               _data[4] * _data[9] * _data[2] +
+               _data[8] * _data[1] * _data[6] -
+               _data[0] * _data[9] * _data[6] -
+               _data[4] * _data[1] * _data[10] +
+               _data[0] * _data[5] * _data[10];
     }
 
     public Matrix3X4 GetInverse()
@@ -348,18 +352,18 @@ public class Matrix3X4
 
     public void SetOrientationsAndPosition(Quaternion q, Vector3 pos)
     {
-        _mat[0] = 1 - (2 * q.y * q.y + 2 * q.z * q.z);
-        _mat[1] = 2 * q.x * q.y + 2 * q.z * q.w;
-        _mat[2] = 2 * q.x * q.z - 2 * q.y * q.w;
-        _mat[3] = pos.x;
-        _mat[4] = 2 * q.x * q.y - 2 * q.z * q.w;
-        _mat[5] = 1 - (2 * q.x * q.x + 2 * q.z * q.z);
-        _mat[6] = 2 * q.y * q.z + 2 * q.x * q.w;
-        _mat[7] = pos.y;
-        _mat[8] = 2 * q.x * q.z + 2 * q.y * q.w;
-        _mat[9] = 2 * q.y * q.z - 2 * q.x * q.w;
-        _mat[10] = 1 - (2 * q.x * q.x + 2 * q.y * q.y);
-        _mat[11] = pos.z;
+        _data[0] = 1 - (2 * q.y * q.y + 2 * q.z * q.z);
+        _data[1] = 2 * q.x * q.y + 2 * q.z * q.w;
+        _data[2] = 2 * q.x * q.z - 2 * q.y * q.w;
+        _data[3] = pos.x;
+        _data[4] = 2 * q.x * q.y - 2 * q.z * q.w;
+        _data[5] = 1 - (2 * q.x * q.x + 2 * q.z * q.z);
+        _data[6] = 2 * q.y * q.z + 2 * q.x * q.w;
+        _data[7] = pos.y;
+        _data[8] = 2 * q.x * q.z + 2 * q.y * q.w;
+        _data[9] = 2 * q.y * q.z - 2 * q.x * q.w;
+        _data[10] = 1 - (2 * q.x * q.x + 2 * q.y * q.y);
+        _data[11] = pos.z;
     }
 
     public Vector3 LocalToWorld(Vector3 point)
@@ -375,49 +379,49 @@ public class Matrix3X4
     public Vector3 TransformInverse(Vector3 vector)
     {
         Vector3 tmp = vector;
-        tmp.x -= _mat[3];
-        tmp.y -= _mat[7];
-        tmp.z -= _mat[11];
+        tmp.x -= _data[3];
+        tmp.y -= _data[7];
+        tmp.z -= _data[11];
         return new Vector3(
-            tmp.x * _mat[0] +
-            tmp.y * _mat[4] +
-            tmp.z * _mat[8],
-            tmp.x * _mat[1] +
-            tmp.y * _mat[5] +
-            tmp.z * _mat[9],
-            tmp.x * _mat[2] +
-            tmp.y * _mat[6] +
-            tmp.z * _mat[10]
+            tmp.x * _data[0] +
+            tmp.y * _data[4] +
+            tmp.z * _data[8],
+            tmp.x * _data[1] +
+            tmp.y * _data[5] +
+            tmp.z * _data[9],
+            tmp.x * _data[2] +
+            tmp.y * _data[6] +
+            tmp.z * _data[10]
         );
     }
 
     public Vector3 TransformDirection(Vector3 vector)
     {
         return new Vector3(
-            vector.x * _mat[0] +
-            vector.y * _mat[1] +
-            vector.z * _mat[2],
-            vector.x * _mat[4] +
-            vector.y * _mat[5] +
-            vector.z * _mat[6],
-            vector.x * _mat[8] +
-            vector.y * _mat[9] +
-            vector.z * _mat[10]
+            vector.x * _data[0] +
+            vector.y * _data[1] +
+            vector.z * _data[2],
+            vector.x * _data[4] +
+            vector.y * _data[5] +
+            vector.z * _data[6],
+            vector.x * _data[8] +
+            vector.y * _data[9] +
+            vector.z * _data[10]
         );
     }
 
     public Vector3 TransformInverseDirection(Vector3 vector)
     {
         return new Vector3(
-            vector.x * _mat[0] +
-            vector.y * _mat[4] +
-            vector.z * _mat[8],
-            vector.x * _mat[1] +
-            vector.y * _mat[5] +
-            vector.z * _mat[9],
-            vector.x * _mat[2] +
-            vector.y * _mat[6] +
-            vector.z * _mat[10]
+            vector.x * _data[0] +
+            vector.y * _data[4] +
+            vector.z * _data[8],
+            vector.x * _data[1] +
+            vector.y * _data[5] +
+            vector.z * _data[9],
+            vector.x * _data[2] +
+            vector.y * _data[6] +
+            vector.z * _data[10]
         );
     }
 
@@ -431,10 +435,15 @@ public class Matrix3X4
         return TransformInverseDirection(direction);
     }
 
+    public Vector3 GetAxis(int i)
+    {
+        return new Vector3(_data[i], _data[i + 4], _data[i + 8]);
+    }
+
     public float this[int index]
     {
-        get { return _mat[index]; }
-        set { _mat[index] = value; }
+        get { return _data[index]; }
+        set { _data[index] = value; }
     }
 
     public float this[int x, int y]
@@ -443,11 +452,11 @@ public class Matrix3X4
         {
             if (x < 0 || x >= 3 || y < 0 || y >= 4)
                 throw new IndexOutOfRangeException("X is bounded to [0, 3) and Y is bounded to [0, 4)");
-            return _mat[x + y * 3];
+            return _data[x + y * 3];
         }
         set {
             if (x < 0 || x >= 3 || y < 0 || y >= 4)
                 throw new IndexOutOfRangeException("X is bounded to [0, 3) and Y is bounded to [0, 4)");
-            _mat[x + y * 3] = value; }
+            _data[x + y * 3] = value; }
     }
 }

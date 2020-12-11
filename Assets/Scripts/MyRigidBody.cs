@@ -73,7 +73,7 @@ public class MyRigidBody : MonoBehaviour
         velocity *= Mathf.Pow(linearDamping, dt);
         angularVelocity *= Mathf.Pow(angularDamping, dt);
 
-        // Adjust position
+        // Adjust offset
         transform.position += velocity * dt;
 
         transform.rotation *= Quaternion.Euler(angularVelocity);
