@@ -13,6 +13,24 @@ public abstract class ForceGenerator2D
     public abstract void UpdateForce(Particle2D particle, float dt);
 }
 
+public class GravityForceGenerator : ForceGenerator2D
+{
+    public Vector3 gravity;
+
+    public GravityForceGenerator(Vector3 gravity)
+    {
+        this.gravity = gravity;
+    }
+
+    public override void UpdateForce(Particle2D particle, float dt)
+    {
+        if (particle == null)
+            return;
+        
+        particle.AddForce(gravity * particle.mass);
+    }
+}
+
 public class DirectionalForceGenerator : ForceGenerator2D
 {
     public Vector3 force;
@@ -25,10 +43,7 @@ public class DirectionalForceGenerator : ForceGenerator2D
     public override void UpdateForce(Particle2D particle, float dt)
     {
         if (particle == null)
-        {
-            ForceManager.Remove(this);
             return;
-        }
 
         particle.AddForce(force);
     }
@@ -131,7 +146,7 @@ public class SpringForceGenerator : ForceGenerator2D
     {
         if (other == null)
         {
-            ForceManager.Remove(this);
+            //ForceManager.Remove(this);
             return;
         }
 

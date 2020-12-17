@@ -1,37 +1,41 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
+using UnityEngine;
 
-public static class ForceManager
+public static class ForceRegistry
 {
-    internal struct ForceGeneratorParticlePair
+    internal struct ForceBodyPair
     {
         public ForceGenerator forceGenerator;
-        public MyRigidBody body;
+        public MyRigidBody rigidBody;
 
-        internal ForceGeneratorParticlePair(ForceGenerator forceGenerator, MyRigidBody body)
+        internal ForceBodyPair(ForceGenerator fg, MyRigidBody body)
         {
-            this.forceGenerator = forceGenerator;
-            this.body = body;
+            forceGenerator = fg;
+            rigidBody = body;
         }
 
         public void UpdateForce(float dt)
         {
-            forceGenerator.UpdateForce(body, dt);
+            forceGenerator.UpdateForce(rigidBody, dt);
         }
     }
-    private static readonly List<ForceGeneratorParticlePair> Registry;
 
-    static ForceManager()
+    private static readonly List<ForceBodyPair> Registry;
+
+    static ForceRegistry()
     {
-        Registry = new List<ForceGeneratorParticlePair>();
+        Registry = new List<ForceBodyPair>();
     }
 
     public static void FixedUpdate(float dt)
     {
         for (int i = Registry.Count - 1; i >= 0; i--)
         {
-            ForceGeneratorParticlePair pair = Registry[i];
-            if (pair.forceGenerator == null || pair.body == null)
+            ForceBodyPair pair = Registry[i];
+            if (pair.forceGenerator == null || pair.rigidBody)
             {
                 Remove(pair);
                 continue;
@@ -42,9 +46,9 @@ public static class ForceManager
         }
     }
 
-    public static void Add(ForceGenerator forceGenerator, MyRigidBody body)
+    public static void Add(ForceGenerator forceGenerator, MyRigidBody rigidBody)
     {
-        Registry.Add(new ForceGeneratorParticlePair(forceGenerator, body));
+        Registry.Add(new ForceBodyPair(forceGenerator, rigidBody));
     }
 
     public static void Remove(ForceGenerator forceGenerator)
@@ -56,16 +60,16 @@ public static class ForceManager
         }
     }
 
-    public static void Remove(MyRigidBody body)
+    public static void Remove(MyRigidBody rigidBody)
     {
         for (int i = Registry.Count - 1; i >= 0; i--)
         {
-            if (Registry[i].body == body)
+            if (Registry[i].rigidBody == rigidBody)
                 Registry.RemoveAt(i);
         }
     }
 
-    internal static void Remove(ForceGeneratorParticlePair pair)
+    internal static void Remove(ForceBodyPair pair)
     {
         Registry.Remove(pair);
     }

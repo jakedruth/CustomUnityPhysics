@@ -1,24 +1,25 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
+using Object = UnityEngine.Object;
 
-public class ParticleManager
+public static class ParticleManager
 {
-    public int iterations;
-    public int maxContacts;
-    public List<Particle2D> particles;
-    public List<ParticleContactGenerator> contactGenerators;
+    public static int iterations;
+    public static int maxContacts;
+    public static List<Particle2D> particles;
+    public static List<ParticleContactGenerator> contactGenerators;
 
-    public ParticleManager(int maxContacts, int iterations)
+    static ParticleManager()
     {
-        this.maxContacts = maxContacts;
-        ContactResolver.SetIterations(this.iterations = iterations);
+        maxContacts = int.MaxValue;
+        ContactResolver.SetIterations(iterations = int.MaxValue);
 
         particles = new List<Particle2D>();
         contactGenerators = new List<ParticleContactGenerator>();
     }
 
-    public void FixedUpdate(float dt)
+    public static void RunPhysics(float dt)
     {
         // Update forces
         ForceManager.FixedUpdate(dt);
@@ -35,6 +36,7 @@ public class ParticleManager
             // Check if particle is Target
             if (particles[i].tag == "Target")
                 continue;
+
 
             // Check if particle is below Y Kill zone
             if (particles[i].transform.position.y <= -10)
@@ -68,7 +70,7 @@ public class ParticleManager
         }
     }
 
-    public Particle2DContact[] GenerateContacts()
+    public static Particle2DContact[] GenerateContacts()
     {
         int limit = maxContacts;
         List<Particle2DContact> contacts = new List<Particle2DContact>();
