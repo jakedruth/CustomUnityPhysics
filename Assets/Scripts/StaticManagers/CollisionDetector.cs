@@ -84,42 +84,47 @@ public static class CollisionDetector
         protected void CalculateContactBasis()
         {
             Vector3[] contactTangent = new Vector3[2];
-            contactToWorld = new Matrix3X3();
-            //contactWorldRotation = Quaternion.identity;
 
-            // Check whether the Z-axis is nearer to the X- or Y-axis
+            // Check whether the Z-axis is nearer to the X or Y axis
             if (Mathf.Abs(normal.x) > Mathf.Abs(normal.y))
             {
-                // Scaling factor to ensure the results are normalized.
+                // Scaling factor to ensure the results are normalized
                 float s = 1.0f / Mathf.Sqrt(normal.z * normal.z + normal.x * normal.x);
 
-                // The new X-axis is at right angles to the world Y-axis.
+                // The new X-axis is at right angles to the world Y-axis
                 contactTangent[0].x = normal.z * s;
                 contactTangent[0].y = 0;
                 contactTangent[0].z = -normal.x * s;
-                
-                // The new Y-axis is at right angles to the new X- and Z-axes.
+
+                // The new Y-axis is at right angles to the new X- and Z- axes
                 contactTangent[1].x = normal.y * contactTangent[0].x;
-                contactTangent[1].y = normal.z * contactTangent[0].x - normal.x * contactTangent[0].z;
+                contactTangent[1].y = normal.z * contactTangent[0].x -
+                                      normal.x * contactTangent[0].z;
                 contactTangent[1].z = -normal.y * contactTangent[0].x;
             }
             else
             {
-                // Scaling factor to ensure the results are normalized.
+                // Scaling factor to ensure the results are normalised
                 float s = 1.0f / Mathf.Sqrt(normal.z * normal.z + normal.y * normal.y);
-                
-                // The new X-axis is at right angles to the world X-axis.
-                contactTangent[0].x = 0;
-                contactTangent[0].y = -normal.z * s;
-                contactTangent[0].z = normal.y * s;
 
-                // The new Y-axis is at right angles to the new X- and Z-axes.
-                contactTangent[1].x = normal.y * contactTangent[0].z - normal.z * contactTangent[0].y;
+                // The new X-axis is at right angles to the world X-axis
+                contactTangent[0].x = 0;
+                contactTangent[0].y = -normal.z*s;
+                contactTangent[0].z = normal.y*s;
+
+                // The new Y-axis is at right angles to the new X- and Z- axes
+                contactTangent[1].x = normal.y * contactTangent[0].z -
+                                      normal.z * contactTangent[0].y;
                 contactTangent[1].y = -normal.x * contactTangent[0].z;
                 contactTangent[1].z = normal.x * contactTangent[0].y;
             }
 
-            contactToWorld.SetComponents(contactTangent[1], normal, contactTangent[0]);
+            // Make a matrix from the three vectors.
+            contactToWorld = new Matrix3X3();
+            contactToWorld.SetComponents(
+                contactTangent[1],
+                normal,
+                contactTangent[0]);
         }
 
         protected Vector3 CalculateFrictionlessImpulse(Matrix3X3[] inverseInertiaTensor)
@@ -158,6 +163,82 @@ public static class CollisionDetector
             impulseContact.y = desiredDeltaVelocity / deltaVelocity;
             impulseContact.x = 0;
             impulseContact.z = 0;
+            return impulseContact;
+        }
+
+        private Vector3 CalculateFrictionImpulse(Matrix3X3[] inverseInertiaTensor)
+        {
+            float inverseMass = bodies[0].inverseMass;
+
+            // The equivalent of a cross product in matrices is multiplication
+            // by a skew symmetric matrix - we build the matrix for converting
+            // between linear and angular quantities.
+            Matrix3X3 impulseToTorque = new Matrix3X3();
+            impulseToTorque.SetSkewSymmetric(relativeContactPosition[0]);
+
+            // Build the matrix to convert contact impulse to change in velocity
+            // in world coordinates.
+            Matrix3X3 deltaVelWorld = impulseToTorque;
+            deltaVelWorld *= inverseInertiaTensor[0];
+            deltaVelWorld *= impulseToTorque;
+            deltaVelWorld *= -1f;
+
+            // Check if we need to add body two's data
+            if (bodies[1] != null)
+            {
+                // Set the cross product matrix
+                impulseToTorque.SetSkewSymmetric(relativeContactPosition[1]);
+
+                // Calculate the velocity change matrix
+                Matrix3X3 deltaVelWorld2 = impulseToTorque;
+                deltaVelWorld2 *= inverseInertiaTensor[1];
+                deltaVelWorld2 *= impulseToTorque;
+                deltaVelWorld2 *= -1;
+
+                // Add to the total delta velocity.
+                deltaVelWorld += deltaVelWorld2;
+
+                // Add to the inverse mass
+                inverseMass += bodies[1].inverseMass;
+            }
+
+            // Do a change of basis to convert into contact coordinates.
+            Matrix3X3 deltaVelocity = contactToWorld.GetTranspose();
+            deltaVelocity *= deltaVelWorld;
+            deltaVelocity *= contactToWorld;
+
+            // Add in the linear velocity change
+            deltaVelocity[0] += inverseMass;
+            deltaVelocity[4] += inverseMass;
+            deltaVelocity[8] += inverseMass;
+
+
+            // Invert to get the impulse needed per unit velocity
+            Matrix3X3 impulseMatrix = deltaVelocity.GetInverse();
+
+            // Find the target velocities to kill
+            Vector3 velKill = new Vector3(-contactVelocity.x, desiredDeltaVelocity, -contactVelocity.z);
+
+            // Find the impulse to kill target velocities
+            Vector3 impulseContact = impulseMatrix.Transform(velKill);
+
+            // Check for exceeding friction
+            float planarImpulse = Mathf.Sqrt(impulseContact.x * impulseContact.x + impulseContact.z * impulseContact.z);
+
+            if (planarImpulse > impulseContact.y * friction)
+            {
+                // We need to use dynamic friction
+                impulseContact.x /= planarImpulse;
+                impulseContact.z /= planarImpulse;
+
+                impulseContact.y = deltaVelocity[0] +
+                                   deltaVelocity[1] * friction * impulseContact.x +
+                                   deltaVelocity[2] * friction * impulseContact.z;
+                impulseContact.y = desiredDeltaVelocity / impulseContact.y;
+                impulseContact.x *= friction * impulseContact.y;
+                impulseContact.z *= friction * impulseContact.y;
+            }
+
             return impulseContact;
         }
 
@@ -210,7 +291,7 @@ public static class CollisionDetector
             velocity += body.velocity;
 
             // Turn the velocity into contact coordinates
-            Vector3 vel = contactToWorld.TransformTranspose(velocity);
+            Vector3 localVelocity = contactToWorld.TransformTranspose(velocity);
 
             // Calculate the amount of velocity that is due to forces without reactions
             Vector3 accVelocity = body.prevAcceleration * dt;
@@ -220,14 +301,14 @@ public static class CollisionDetector
 
             // We ignore any component of acceleration in the contact normal
             // direction, we are only interested in planar acceleration
-            accVelocity.x = 0;
+            accVelocity.y = 0;
 
             // Add the planar velocities - if there's enough friction they will
             // be removed during velocity resolution
-            vel += accVelocity;
+            localVelocity += accVelocity;
 
             // And return it
-            return vel;
+            return localVelocity;
         }
 
         internal void CalculateDesiredDeltaVelocity(float dt)
@@ -237,69 +318,147 @@ public static class CollisionDetector
             // Calculate the acceleration induced velocity accumulated this frame
             float velocityFromAcc = 0;
 
-            if (bodies[0] != null) 
+            if (bodies[0] != null)
+            {
                 velocityFromAcc += Vector3.Dot(bodies[0].prevAcceleration * dt, normal);
+            }
 
             if (bodies[1] != null)
+            {
                 velocityFromAcc -= Vector3.Dot(bodies[1].prevAcceleration * dt, normal);
+            }
 
             // If the velocity is very slow, limit the restitution
             float thisRestitution = restitution;
             if (Mathf.Abs(contactVelocity.y) < velocityLimit)
-                thisRestitution = 0f;
-
-            // Combine the bounce velocity with the removed acceleration velocity
-            desiredDeltaVelocity = -contactVelocity.y - thisRestitution * (contactVelocity.y - velocityFromAcc);
-        }
-
-        public void ApplyPositionChange(out Vector3[] velocityChange, out Vector3[] rotationChange, float max)
-        {
-            velocityChange = new Vector3[2];
-            rotationChange = new Vector3[2];
-
-            // Get hold of the inverse mass and inverse inertia tensor, both is world coordinates
-            Matrix3X3[] inverseInertiaTensor = new Matrix3X3[2];
-            inverseInertiaTensor[0] = bodies[0].inverseInertiaTensorWorld;
-            if (bodies[1] != null)
-                inverseInertiaTensor[1] = bodies[1].inverseInertiaTensorWorld;
-
-            // We will calculate the impulse for each contact axis
-            Vector3 impulsiveContact = Math.Abs(friction) < 0.001f 
-                ? CalculateFrictionlessImpulse(inverseInertiaTensor) 
-                : CalculateFrictionImpulse(inverseInertiaTensor);
-
-            // Convert the impulse to world coordinates
-            Vector3 impulse = contactToWorld.Transform(impulsiveContact);
-
-            // Split in the impulse into linear and rotational components
-            Vector3 impulsiveTorque = Vector3.Cross(relativeContactPosition[0], impulse);
-            rotationChange[0] = inverseInertiaTensor[0].Transform(impulsiveTorque);
-            velocityChange[0] = Vector3.zero;
-            velocityChange[0] += impulse * bodies[0].inverseMass;
-
-            // apply the changes
-            bodies[0].velocity += velocityChange[0];
-            bodies[0].angularVelocity += rotationChange[0];
-
-            // apply the changes to the other body if not null
-            if (bodies[1] != null)
             {
-                // Work out body one's linear and angular changes
-                impulsiveTorque = Vector3.Cross(impulse, relativeContactPosition[1]);
-                rotationChange[1] = inverseInertiaTensor[1].Transform(impulsiveTorque);
-                velocityChange[1] = Vector3.zero;
-                velocityChange[1] += impulse * -bodies[1].inverseMass;
-
-                // And apply them.
-                bodies[1].velocity += velocityChange[1];
-                bodies[1].angularVelocity += rotationChange[1];
+                thisRestitution = 0.0f;
             }
+
+            // Combine the bounce velocity with the removed
+            // acceleration velocity.
+            desiredDeltaVelocity =
+                -contactVelocity.y
+                -thisRestitution * (contactVelocity.y - velocityFromAcc);
         }
 
-        private Vector3 CalculateFrictionImpulse(Matrix3X3[] inverseInertiaTensor)
+        public void ApplyPositionChange(out Vector3[] linearChange, out Vector3[] angularChange, float max)
         {
-            // TODO: Implement friction based impulses
-            return CalculateFrictionlessImpulse(inverseInertiaTensor);
+            linearChange = new Vector3[2];
+            angularChange = new Vector3[2];
+
+            const float angularLimit = 0.2f;
+            float[] angularMove = new float[2];
+            float[] linearMove = new float[2];
+
+            float totalInertia = 0;
+            float[] linearInertia = new float[2];
+            float[] angularInertia = new float[2];
+
+            // We need to work out the inertia of each object in the direction
+            // of the contact normal, due to angular inertia only.
+            for (int i = 0; i < 2; i++) if (bodies[i])
+            {
+                Matrix3X3 inverseInertiaTensor = bodies[i].inverseInertiaTensor;
+
+                // Use the same procedure as for calculating frictionless
+                // velocity change to work out the angular inertia.
+                Vector3 angularInertiaWorld = Vector3.Cross(relativeContactPosition[i], normal);
+                angularInertiaWorld = inverseInertiaTensor.Transform(angularInertiaWorld);
+                angularInertiaWorld = Vector3.Cross(angularInertiaWorld, relativeContactPosition[i]);
+                angularInertia[i] = Vector3.Dot(angularInertiaWorld, normal);
+
+                // The linear component is simply the inverse mass
+                linearInertia[i] = bodies[i].inverseMass;
+
+                // Keep track of the total inertia from all components
+                totalInertia += linearInertia[i] + angularInertia[i];
+
+                // We break the loop here so that the totalInertia value is
+                // completely calculated (by both iterations) before
+                // continuing.
+            }
+
+            // Loop through again calculating and applying the changes
+            for (int i = 0; i < 2; i++) if (bodies[i])
+            {
+                // The linear and angular movements required are in proportion to
+                // the two inverse inertias.
+                float sign = (i == 0)?1:-1;
+                angularMove[i] = sign * penetration * (angularInertia[i] / totalInertia);
+                linearMove[i] =
+                    sign * penetration * (linearInertia[i] / totalInertia);
+
+                // To avoid angular projections that are too great (when mass is large
+                // but inertia tensor is small) limit the angular move.
+                Vector3 projection = relativeContactPosition[i];
+                //projection.addScaledVector(
+                //    contactNormal,
+                //    -relativeContactPosition[i].scalarProduct(contactNormal)
+                //    );
+
+                projection += normal * Vector3.Dot(-relativeContactPosition[i], normal);
+
+                // Use the small angle approximation for the sine of the angle (i.e.
+                // the magnitude would be sine(angularLimit) * projection.magnitude
+                // but we approximate sine(angularLimit) to angularLimit).
+                float maxMagnitude = angularLimit * projection.magnitude;
+
+                if (angularMove[i] < -maxMagnitude)
+                {
+                    float totalMove = angularMove[i] + linearMove[i];
+                    angularMove[i] = -maxMagnitude;
+                    linearMove[i] = totalMove - angularMove[i];
+                }
+                else if (angularMove[i] > maxMagnitude)
+                {
+                    float totalMove = angularMove[i] + linearMove[i];
+                    angularMove[i] = maxMagnitude;
+                    linearMove[i] = totalMove - angularMove[i];
+                }
+
+                // We have the linear amount of movement required by turning
+                // the rigid body (in angularMove[i]). We now need to
+                // calculate the desired rotation to achieve that.
+                if (angularMove[i] == 0)
+                {
+                    // Easy case - no angular movement means no rotation.
+                    angularChange[i] = Vector3.zero;
+                }
+                else
+                {
+                    // Work out the direction we'd like to rotate in.
+                    Vector3 targetAngularDirection = Vector3.Cross(relativeContactPosition[i], normal);
+
+                    Matrix3X3 inverseInertiaTensor = bodies[i].inverseInertiaTensor;
+
+                    // Work out the direction we'd need to rotate to achieve that
+                    angularChange[i] = inverseInertiaTensor.Transform(targetAngularDirection) * (angularMove[i] / angularInertia[i]);
+                }
+
+                // Velocity change is easier - it is just the linear movement
+                // along the contact normal.
+                linearChange[i] = normal * linearMove[i];
+
+                // Now we can start to apply the values we've calculated.
+                // Apply the linear movement
+                Vector3 pos = bodies[i].transform.position;
+                pos += normal * linearMove[i];
+                bodies[i].transform.position = pos;
+
+                // And the change in orientation
+                Quaternion q = bodies[i].transform.rotation;
+                q *= Quaternion.Euler(angularChange[i] * 1.0f);
+                bodies[i].transform.rotation = q;
+
+                // We need to calculate the derived data for any body that is
+                // asleep, so that the changes are reflected in the object's
+                // data. Otherwise the resolution will not change the position
+                // of the object, and the next collision detection round will
+                // have the same penetration.
+                if (!bodies[i].isAwake)
+                    bodies[i].CalculateDerivedData();
+            }
         }
 
         public void ApplyVelocityChange(out Vector3[] velocityChange, out Vector3[] rotationChange)
@@ -343,6 +502,20 @@ public static class CollisionDetector
                 // And apply them.
                 bodies[1].velocity += velocityChange[1];
                 bodies[1].angularVelocity += rotationChange[1];
+            }
+        }
+
+        public void MatchAwakeState()
+        {
+            if (bodies[1] == null)
+                return;
+
+            if (bodies[0].isAwake ^ bodies[1].isAwake)
+            {
+                if (bodies[0].isAwake)
+                    bodies[1].SetAwake();
+                else
+                    bodies[0].SetAwake();
             }
         }
     }

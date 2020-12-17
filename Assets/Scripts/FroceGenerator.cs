@@ -161,7 +161,7 @@ public class SpringFG : ForceGenerator
         force.Normalize();
         force *= -magnitude;
 
-        body.AddForceAtPoint(force, lws);
+        body.AddForce(force, lws);
     }
 }
 
@@ -189,6 +189,6 @@ public class AnchoredSpringFG : ForceGenerator
         Vector3 dir = displacement / distance;
 
         float magnitude = (restLength - distance) * springConstant;
-        body.AddForceAtPoint(dir * magnitude, lws);
+        body.AddForce(dir * magnitude, lws);
     }
 }

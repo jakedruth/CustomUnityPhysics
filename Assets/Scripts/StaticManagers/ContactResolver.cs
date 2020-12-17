@@ -132,7 +132,7 @@ public static class ContactResolver
                 break;
 
             // TODO: Match the awake state at the contact
-            // contacts[index].MatchAwakeState();
+            contacts[index].MatchAwakeState();
 
             // Resolve the penetration.
             contacts[index].ApplyPositionChange(out Vector3[] linearChange, out Vector3[] angularChange, max);

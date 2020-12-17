@@ -33,7 +33,6 @@ public class TestCollision : MonoBehaviour
         //ForceManager.Add(gravity, sphereB);
         //ForceManager.Add(gravity, boxA);
 
-
         //CollisionDetector.CollisionData data = new CollisionDetector.CollisionData(0, 0);
         //int contactCount = 0;
         //contactCount += CollisionDetector.SphereAndSphere(sA, sB, ref data);
@@ -54,10 +53,19 @@ public class TestCollision : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.A))
+            sphereA.AddForce(Vector3.left * 200, sphereA.transform.position + Vector3.up);
+
+        if (Input.GetKeyDown(KeyCode.D))
+            sphereA.AddForce(Vector3.right * 200, sphereA.transform.position + Vector3.up);
+
+        if (Input.GetKeyDown(KeyCode.W))
+            sphereA.AddForce(Vector3.forward * 200, sphereA.transform.position + Vector3.up);
+
+        if (Input.GetKeyDown(KeyCode.S))
+            sphereA.AddForce(Vector3.back * 200, sphereA.transform.position + Vector3.up);
+
         if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Debug.Log("Here");
-            sphereA.AddForceAtPoint(Vector3.left * 200, sphereA.transform.position + Vector3.up);
-        }
+            sphereA.AddForce(Vector3.up * 200);
     }
 }

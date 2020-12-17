@@ -125,6 +125,34 @@ public class Matrix3X3
             a[6] * b[2] + a[7] * b[5] + a[8] + b[8]);
     }
 
+    public static Matrix3X3 operator *(Matrix3X3 m, float scalar)
+    {
+        return new Matrix3X3(
+            m[0] * scalar,
+            m[1] * scalar,
+            m[2] * scalar,
+            m[3] * scalar,
+            m[4] * scalar,
+            m[5] * scalar,
+            m[6] * scalar,
+            m[7] * scalar,
+            m[8] * scalar);
+    }
+
+    public static Matrix3X3 operator +(Matrix3X3 a, Matrix3X3 b)
+    {
+        return new Matrix3X3(
+            a[0] + b[0],
+            a[1] + b[1],
+            a[2] + b[2],
+            a[3] + b[3],
+            a[4] + b[4],
+            a[5] + b[5],
+            a[6] + b[6],
+            a[7] + b[7],
+            a[8] + b[8]);
+    }
+
     public Vector3 Transform(Vector3 vector)
     {
         return this * vector;
@@ -243,6 +271,17 @@ public class Matrix3X3
         }
     }
 
+    public void SetSkewSymmetric(Vector3 vector)
+    {
+        _data[0] = _data[4] = _data[8] = 0;
+        _data[1] = -vector.z;
+        _data[2] = vector.y;
+        _data[3] = vector.z;
+        _data[5] = -vector.x;
+        _data[6] = -vector.y;
+        _data[7] = vector.x;
+    }
+
     /// <summary>
     /// Set the three columns of the matrix from three vectors
     /// </summary>
@@ -252,13 +291,15 @@ public class Matrix3X3
     public void SetComponents(Vector3 a, Vector3 b, Vector3 c)
     {
         _data[0] = a.x;
-        _data[1] = a.y;
-        _data[2] = a.z;
-        _data[3] = b.x;
+        _data[1] = b.x;
+        _data[2] = c.x;
+
+        _data[3] = a.y;
         _data[4] = b.y;
-        _data[5] = b.z;
-        _data[6] = c.x;
-        _data[7] = c.y;
+        _data[5] = c.y;
+        
+        _data[6] = a.z;
+        _data[7] = b.z;
         _data[8] = c.z;
     }
 }

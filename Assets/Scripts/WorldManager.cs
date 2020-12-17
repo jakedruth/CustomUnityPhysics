@@ -34,27 +34,17 @@ public class WorldManager
         Integrate(dt);
 
         // Generate Contacts
-        CollisionDetector.CollisionData data = GenerateContacts(0.0f, 0.2f);
+        CollisionDetector.CollisionData data = GenerateContacts(0.0f, 0.1f);
 
         // Handle Contacts
         if (data.contacts.Count > 0)
         {
             CollisionDetector.Contact[] contacts = data.contacts.ToArray();
-            //foreach (CollisionDetector.Contact contact in contacts)
-            //{
-            //    Debug.DrawRay(contact.point, contact.normal * contact.penetration, Color.red);
-            //}
-            //foreach (CollisionDetector.Contact contact in contacts)
-            //{
-            //    if (contact.bodies[0] != null)
-            //    {
-            //        // works for moving sphere positions, but not rotations
-            //        contact.bodies[0].transform.position += contact.normal * (contact.penetration + 0.0001f);
-            //        float speedIntoContact = Vector3.Dot(contact.bodies[0].velocity, contact.normal);
-            //        contact.bodies[0].velocity -= contact.normal * speedIntoContact;
-            //    }
-            //}
-            
+            foreach (CollisionDetector.Contact contact in contacts)
+            {
+                Debug.DrawRay(contact.point, contact.normal * contact.penetration, Color.red, 2.0f);
+            }
+
             ContactResolver.SetIterations(contacts.Length * 2); 
             ContactResolver.ResolveContacts(contacts, dt);
         }
