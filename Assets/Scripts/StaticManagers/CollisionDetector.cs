@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
@@ -22,7 +23,7 @@ public static class CollisionDetector
     public class Contact
     {
         /// <summary>
-        /// Holds the offset of the contact in World Coordinates
+        /// Holds the distance of the contact in World Coordinates
         /// </summary>
         public Vector3 point;
 
@@ -37,18 +38,312 @@ public static class CollisionDetector
         /// </summary>
         public float penetration;
 
-        // Not sure what this is yet... stay tuned me.
-        public MyRigidBody body1;
-        public MyRigidBody body2;
+        public MyRigidBody[] bodies = new MyRigidBody[2];
         public float friction;
         public float restitution;
 
+        /// <summary>
+        /// A transform matrix that converts co-ordinates in the contact's
+        /// frame of reference to world co-ordinates. The columns of this
+        /// matrix form an orthonormal set of vectors.
+        /// </summary>
+        internal Matrix3X3 contactToWorld;
+        //internal Quaternion contactWorldRotation;
+
+        /// <summary>
+        /// Holds the closing velocity at the point of contact. This is set
+        /// when the calculateInternals function is run.
+        /// </summary>
+        internal Vector3 contactVelocity;
+
+        /// <summary>
+        /// Holds the required change in velocity for this contact to resolved.
+        /// </summary>
+        internal float desiredDeltaVelocity;
+
+        /// <summary>
+        /// Holds the world space position of the contact point relative to
+        /// centre of each body. This is set when the calculateInternals function is run.
+        /// </summary>
+        internal Vector3[] relativeContactPosition = new Vector3[2];
+
         public void SetBodyData(MyRigidBody one, MyRigidBody two, float friction, float restitution)
         {
-            body1 = one;
-            body2 = two;
+            bodies[0] = one;
+            bodies[1] = two;
             this.friction = friction;
             this.restitution = restitution;
+        }
+
+        /// <summary>
+        /// Constructs an arbitrary orthonormal basis for the contact. This is stored as a 3 x 3 matrix,
+        /// where each vector is a column (in other words, the matrix transforms contact space into world space).
+        /// The x direction is generated from the contact normal,
+        /// and the y and z  directions are set so that they are at right angles to it.
+        /// </summary>
+        protected void CalculateContactBasis()
+        {
+            Vector3[] contactTangent = new Vector3[2];
+            contactToWorld = new Matrix3X3();
+            //contactWorldRotation = Quaternion.identity;
+
+            // Check whether the Z-axis is nearer to the X- or Y-axis
+            if (Mathf.Abs(normal.x) > Mathf.Abs(normal.y))
+            {
+                // Scaling factor to ensure the results are normalized.
+                float s = 1.0f / Mathf.Sqrt(normal.z * normal.z + normal.x * normal.x);
+
+                // The new X-axis is at right angles to the world Y-axis.
+                contactTangent[0].x = normal.z * s;
+                contactTangent[0].y = 0;
+                contactTangent[0].z = -normal.x * s;
+                
+                // The new Y-axis is at right angles to the new X- and Z-axes.
+                contactTangent[1].x = normal.y * contactTangent[0].x;
+                contactTangent[1].y = normal.z * contactTangent[0].x - normal.x * contactTangent[0].z;
+                contactTangent[1].z = -normal.y * contactTangent[0].x;
+            }
+            else
+            {
+                // Scaling factor to ensure the results are normalized.
+                float s = 1.0f / Mathf.Sqrt(normal.z * normal.z + normal.y * normal.y);
+                
+                // The new X-axis is at right angles to the world X-axis.
+                contactTangent[0].x = 0;
+                contactTangent[0].y = -normal.z * s;
+                contactTangent[0].z = normal.y * s;
+
+                // The new Y-axis is at right angles to the new X- and Z-axes.
+                contactTangent[1].x = normal.y * contactTangent[0].z - normal.z * contactTangent[0].y;
+                contactTangent[1].y = -normal.x * contactTangent[0].z;
+                contactTangent[1].z = normal.x * contactTangent[0].y;
+            }
+
+            contactToWorld.SetComponents(contactTangent[1], normal, contactTangent[0]);
+        }
+
+        protected Vector3 CalculateFrictionlessImpulse(Matrix3X3[] inverseInertiaTensor)
+        {
+            Vector3 impulseContact = Vector3.zero;
+
+            // Build a vector that shows the change in velocity in
+            // world space for a unit impulse in the direction of the contact
+            // normal.
+            Vector3 deltaVelWorld = Vector3.Cross(relativeContactPosition[0], normal);
+            deltaVelWorld = inverseInertiaTensor[0].Transform(deltaVelWorld);
+            deltaVelWorld = Vector3.Cross(deltaVelWorld, relativeContactPosition[0]);
+
+            // Work out the change in velocity in contact coordiantes.
+            float deltaVelocity = Vector3.Dot(deltaVelWorld, normal);
+
+            // Add the linear component of velocity change
+            deltaVelocity += bodies[0].inverseMass;
+
+            // Check if we need to the second body's data
+            if (bodies[1])
+            {
+                // Go through the same transformation sequence again
+                Vector3 delta = Vector3.Cross(relativeContactPosition[1], normal);
+                delta = inverseInertiaTensor[1].Transform(delta);
+                delta = Vector3.Cross(delta, relativeContactPosition[1]);
+
+                // Add the change in velocity due to rotation
+                deltaVelocity += Vector3.Dot(delta, normal);
+
+                // Add the change in velocity due to linear motion
+                deltaVelocity += bodies[1].inverseMass;
+            }
+
+            // Calculate the required size of the impulse
+            impulseContact.y = desiredDeltaVelocity / deltaVelocity;
+            impulseContact.x = 0;
+            impulseContact.z = 0;
+            return impulseContact;
+        }
+
+        public void CalculateInternals(float dt)
+        {
+            // check to see if the first object is null, and swap if it is.
+            if (bodies[0] == null)
+            {
+                // check to see if the second body is null
+                if (bodies[1] == null)
+                    return;
+
+                // Swap the bodies so the first body is not null
+                SwapBodies();
+            }
+
+            // Calculate a set of axes at the contact point
+            CalculateContactBasis();
+
+            // store the relative position of the contact relative to each body.
+            relativeContactPosition[0] = point - bodies[0].transform.position;
+            if (bodies[1] != null) 
+                relativeContactPosition[1] = point - bodies[1].transform.position;
+
+            // find the relative velocity of the bodies at the contact point
+            contactVelocity = CalculateLocalVelocity(0, dt);
+            if (bodies[1])
+                contactVelocity -= CalculateLocalVelocity(1, dt);
+
+            // Calculate the desired change in velocity for resolution
+            CalculateDesiredDeltaVelocity(dt);
+        }
+
+        public void SwapBodies()
+        {
+            normal *= -1;
+
+            MyRigidBody temp = bodies[0];
+            bodies[0] = bodies[1];
+            bodies[1] = temp;
+        }
+
+        private Vector3 CalculateLocalVelocity(int bodyIndex, float dt)
+        {
+            // Get the rigid body based on the index
+            MyRigidBody body = bodies[bodyIndex];
+
+            // Work out the velocity of the contact point
+            Vector3 velocity = Vector3.Cross(body.angularVelocity, relativeContactPosition[bodyIndex]);
+            velocity += body.velocity;
+
+            // Turn the velocity into contact coordinates
+            Vector3 vel = contactToWorld.TransformTranspose(velocity);
+
+            // Calculate the amount of velocity that is due to forces without reactions
+            Vector3 accVelocity = body.prevAcceleration * dt;
+
+            // Calculate the velocity in contact-coordinates.
+            accVelocity = contactToWorld.TransformTranspose(accVelocity);
+
+            // We ignore any component of acceleration in the contact normal
+            // direction, we are only interested in planar acceleration
+            accVelocity.x = 0;
+
+            // Add the planar velocities - if there's enough friction they will
+            // be removed during velocity resolution
+            vel += accVelocity;
+
+            // And return it
+            return vel;
+        }
+
+        internal void CalculateDesiredDeltaVelocity(float dt)
+        {
+            const float velocityLimit = 0.25f;
+
+            // Calculate the acceleration induced velocity accumulated this frame
+            float velocityFromAcc = 0;
+
+            if (bodies[0] != null) 
+                velocityFromAcc += Vector3.Dot(bodies[0].prevAcceleration * dt, normal);
+
+            if (bodies[1] != null)
+                velocityFromAcc -= Vector3.Dot(bodies[1].prevAcceleration * dt, normal);
+
+            // If the velocity is very slow, limit the restitution
+            float thisRestitution = restitution;
+            if (Mathf.Abs(contactVelocity.y) < velocityLimit)
+                thisRestitution = 0f;
+
+            // Combine the bounce velocity with the removed acceleration velocity
+            desiredDeltaVelocity = -contactVelocity.y - thisRestitution * (contactVelocity.y - velocityFromAcc);
+        }
+
+        public void ApplyPositionChange(out Vector3[] velocityChange, out Vector3[] rotationChange, float max)
+        {
+            velocityChange = new Vector3[2];
+            rotationChange = new Vector3[2];
+
+            // Get hold of the inverse mass and inverse inertia tensor, both is world coordinates
+            Matrix3X3[] inverseInertiaTensor = new Matrix3X3[2];
+            inverseInertiaTensor[0] = bodies[0].inverseInertiaTensorWorld;
+            if (bodies[1] != null)
+                inverseInertiaTensor[1] = bodies[1].inverseInertiaTensorWorld;
+
+            // We will calculate the impulse for each contact axis
+            Vector3 impulsiveContact = Math.Abs(friction) < 0.001f 
+                ? CalculateFrictionlessImpulse(inverseInertiaTensor) 
+                : CalculateFrictionImpulse(inverseInertiaTensor);
+
+            // Convert the impulse to world coordinates
+            Vector3 impulse = contactToWorld.Transform(impulsiveContact);
+
+            // Split in the impulse into linear and rotational components
+            Vector3 impulsiveTorque = Vector3.Cross(relativeContactPosition[0], impulse);
+            rotationChange[0] = inverseInertiaTensor[0].Transform(impulsiveTorque);
+            velocityChange[0] = Vector3.zero;
+            velocityChange[0] += impulse * bodies[0].inverseMass;
+
+            // apply the changes
+            bodies[0].velocity += velocityChange[0];
+            bodies[0].angularVelocity += rotationChange[0];
+
+            // apply the changes to the other body if not null
+            if (bodies[1] != null)
+            {
+                // Work out body one's linear and angular changes
+                impulsiveTorque = Vector3.Cross(impulse, relativeContactPosition[1]);
+                rotationChange[1] = inverseInertiaTensor[1].Transform(impulsiveTorque);
+                velocityChange[1] = Vector3.zero;
+                velocityChange[1] += impulse * -bodies[1].inverseMass;
+
+                // And apply them.
+                bodies[1].velocity += velocityChange[1];
+                bodies[1].angularVelocity += rotationChange[1];
+            }
+        }
+
+        private Vector3 CalculateFrictionImpulse(Matrix3X3[] inverseInertiaTensor)
+        {
+            // TODO: Implement friction based impulses
+            return CalculateFrictionlessImpulse(inverseInertiaTensor);
+        }
+
+        public void ApplyVelocityChange(out Vector3[] velocityChange, out Vector3[] rotationChange)
+        {
+            velocityChange = new Vector3[2];
+            rotationChange = new Vector3[2];
+
+            // Get hold of the inverse mass and inverse inertia tensor, both in world coordinates
+            Matrix3X3[] inverseInertiaTensor = new Matrix3X3[2];
+            inverseInertiaTensor[0] = bodies[0].inverseInertiaTensorWorld;
+            if (bodies[1] != null)
+                inverseInertiaTensor[1] = bodies[1].inverseInertiaTensorWorld;
+
+            // We will calculate the impulse for each contact axis
+            Vector3 impulsiveContact = Math.Abs(friction) < 0.001f 
+                ? CalculateFrictionlessImpulse(inverseInertiaTensor) 
+                : CalculateFrictionImpulse(inverseInertiaTensor);
+
+            // Convert impulse to world coordinates
+            Vector3 impulse = contactToWorld.Transform(impulsiveContact);
+
+            // Split in the impulse into linear and rotational components
+            Vector3 impulsiveTorque = Vector3.Cross(relativeContactPosition[0], impulse);
+            rotationChange[0] = inverseInertiaTensor[0].Transform(impulsiveTorque);
+            velocityChange[0] = Vector3.zero;
+            velocityChange[0] += impulse * bodies[0].inverseMass;
+
+            // Apply the changes
+            bodies[0].velocity += velocityChange[0];
+            bodies[0].angularVelocity += rotationChange[0];
+
+            // apply the changes to the other body if not null
+            if (bodies[1] != null)
+            {
+                // Work out body one's linear and angular changes
+                impulsiveTorque = Vector3.Cross(impulse, relativeContactPosition[1]);
+                rotationChange[1] = inverseInertiaTensor[1].Transform(impulsiveTorque);
+                velocityChange[1] = Vector3.zero;
+                velocityChange[1] += impulse * -bodies[1].inverseMass;
+
+                // And apply them.
+                bodies[1].velocity += velocityChange[1];
+                bodies[1].angularVelocity += rotationChange[1];
+            }
         }
     }
 
@@ -70,6 +365,21 @@ public static class CollisionDetector
             this.friction = friction;
             this.restitution = restitution;
         }
+    }
+
+    public static int DetectCollisionWithStaticGround(Primitive.Plane plane, Primitive b, ref CollisionData data)
+    {
+        switch (b)
+        {
+            case Primitive.Sphere sphere:
+                return SphereAndHalfSpace(sphere, plane, ref data);
+            case Primitive.Box box:
+                return BoxAndHalfSpace(box, plane, ref data);
+        }
+
+        Debug.Log("Checking planeA against another planeA");
+
+        return 0;
     }
 
     public static int SphereAndSphere(Primitive.Sphere one, Primitive.Sphere two, ref CollisionData data)
@@ -105,7 +415,7 @@ public static class CollisionDetector
     {
         Vector3 spherePos = sphere.GetWorldPosition();
 
-        float dist = Vector3.Dot(plane.normal, spherePos) - sphere.radius - plane.offset;
+        float dist = Vector3.Dot(plane.normal, spherePos) - sphere.radius - plane.distance;
 
         if (dist >= 0)
             return 0;
@@ -127,7 +437,7 @@ public static class CollisionDetector
     public static int SphereAndTruePlane(Primitive.Sphere sphere, Primitive.Plane plane, ref CollisionData data)
     {
         Vector3 spherePos = sphere.GetWorldPosition();
-        float dist = Vector3.Dot(plane.normal , spherePos) - plane.offset;
+        float dist = Vector3.Dot(plane.normal , spherePos) - plane.distance;
         if (dist > sphere.radius)
             return 0;
 
@@ -164,13 +474,13 @@ public static class CollisionDetector
         {
             Vector3 vertexPos = verts[i];
             float dist = Vector3.Dot(vertexPos, plane.normal);
-            if (dist <= plane.offset)
+            if (dist <= plane.distance)
             {
                 Contact contact = new Contact()
                 {
-                    point = plane.normal * (dist - plane.offset) + vertexPos,
+                    point = plane.normal * (dist - plane.distance) + vertexPos,
                     normal = plane.normal,
-                    penetration = plane.offset - dist
+                    penetration = plane.distance - dist
                 };
                 contact.SetBodyData(box.body, null, data.friction, data.restitution);
                 data.contacts.Add(contact);
@@ -341,17 +651,23 @@ public abstract class Primitive
         }
     }
 
-    public class Plane
+    public class Plane : Primitive
     {
         public Vector3 normal = Vector3.zero;
-        public float offset;
+        public float distance;
 
         public Plane() { }
 
-        public Plane(Vector3 normal, float offset)
+        public Plane(Vector3 normal, float distance)
         {
             this.normal = normal;
-            this.offset = offset;
+            this.distance = distance;
+        }
+
+        public Plane(Vector3 normal, Vector3 position)
+        {
+            this.normal = normal;
+            this.distance = Vector3.Dot(normal, position);
         }
     }
 

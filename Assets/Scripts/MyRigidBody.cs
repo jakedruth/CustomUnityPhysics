@@ -17,11 +17,11 @@ public class MyRigidBody : MonoBehaviour
 
     internal Vector3 velocity = Vector3.zero;
     internal Vector3 acceleration = Vector3.zero;
-    private Vector3 _prevAcceleration = Vector3.zero;
+    internal Vector3 prevAcceleration = Vector3.zero;
 
     internal Vector3 angularVelocity = Vector3.zero;
 
-    private Vector3 _accumulatedForces;
+    public Vector3 accumulatedForces;
     private Vector3 _accumulatedTorque;
     internal bool isAwake;
 
@@ -57,14 +57,14 @@ public class MyRigidBody : MonoBehaviour
     public void Integrate(float dt)
     {
         // Calculate Linear Acceleration from maxForce inputs
-        _prevAcceleration = acceleration;
-        _prevAcceleration += _accumulatedForces * inverseMass;
+        prevAcceleration = acceleration;
+        prevAcceleration += accumulatedForces * inverseMass;
 
         // Calculate angluar acceleation from torque inputs
         Vector3 angularAcceleration = inverseInertiaTensorWorld.Transform(_accumulatedTorque);
 
         // Update linear velocity
-        velocity += _prevAcceleration * dt;
+        velocity += prevAcceleration * dt;
 
         // Update angular velocity
         angularVelocity += angularAcceleration * dt;
@@ -73,7 +73,7 @@ public class MyRigidBody : MonoBehaviour
         velocity *= Mathf.Pow(linearDamping, dt);
         angularVelocity *= Mathf.Pow(angularDamping, dt);
 
-        // Adjust offset
+        // Adjust distance
         transform.position += velocity * dt;
 
         transform.rotation *= Quaternion.Euler(angularVelocity);
@@ -99,7 +99,7 @@ public class MyRigidBody : MonoBehaviour
 
     public void AddForce(Vector3 force)
     {
-        _accumulatedForces += force;
+        accumulatedForces += force;
         isAwake = true;
     }
 
@@ -114,7 +114,7 @@ public class MyRigidBody : MonoBehaviour
         Vector3 pt = point;
         pt -= transform.position;
 
-        _accumulatedForces += force;
+        accumulatedForces += force;
         _accumulatedTorque += Vector3.Cross(pt, force);
 
         isAwake = true;
@@ -122,7 +122,7 @@ public class MyRigidBody : MonoBehaviour
 
     public void ClearAccumulators()
     {
-        _accumulatedForces = Vector3.zero;
+        accumulatedForces = Vector3.zero;
         _accumulatedTorque = Vector3.zero;
 
         Matrix3X3 m = new Matrix3X3();

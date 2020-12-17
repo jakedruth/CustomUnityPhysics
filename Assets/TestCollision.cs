@@ -7,31 +7,57 @@ public class TestCollision : MonoBehaviour
     public MyRigidBody sphereA;
     public MyRigidBody sphereB;
     public MyRigidBody boxA;
-    public Transform plane;
+    public Transform planeA;
+    public Transform planeB;
 
-    // Update is called once per frame
-    void Update()
+    void Start()
     {
+        WorldManager.Bodies.Add(sphereA);
+        WorldManager.Bodies.Add(sphereB);
+        WorldManager.Bodies.Add(boxA);
+
         Primitive.Sphere sA = new Primitive.Sphere(sphereA, Vector3.zero, Quaternion.identity, 0.5f);
         Primitive.Sphere sB = new Primitive.Sphere(sphereB, Vector3.zero, Quaternion.identity, 0.5f);
         Primitive.Box bA = new Primitive.Box(boxA, Vector3.zero, Quaternion.identity, Vector3.one * 0.5f);
-        Primitive.Plane p = new Primitive.Plane(plane.up, (plane.position).magnitude);
+        Primitive.Plane pA = new Primitive.Plane(planeA.up, planeA.position);
+        Primitive.Plane pB = new Primitive.Plane(planeB.up, planeB.position);
 
-        CollisionDetector.CollisionData data = new CollisionDetector.CollisionData(0, 0);
-        int contactCount = 0;
-        contactCount += CollisionDetector.SphereAndSphere(sA, sB, ref data);
-        contactCount += CollisionDetector.SphereAndHalfSpace(sA, p, ref data);
-        contactCount += CollisionDetector.SphereAndHalfSpace(sB, p, ref data);
+        WorldManager.StaticPlanes.Add(pA);
+        WorldManager.StaticPlanes.Add(pB);
+        WorldManager.Spheres.Add(sA);
+        WorldManager.Spheres.Add(sB);
+        //WorldManager.Boxes.Add(bA);
 
-        contactCount += CollisionDetector.BoxAndSphere(bA, sA, ref data);
-        contactCount += CollisionDetector.BoxAndSphere(bA, sB, ref data);
-        contactCount += CollisionDetector.BoxAndHalfSpace(bA, p, ref data);
+        GravityFG gravity = new GravityFG(Vector3.down * 2);
+        ForceManager.Add(gravity, sphereA);
+        //ForceManager.Add(gravity, sphereB);
+        //ForceManager.Add(gravity, boxA);
 
-        Debug.Log(contactCount);
 
-        foreach (CollisionDetector.Contact contact in data.contacts)
+        //CollisionDetector.CollisionData data = new CollisionDetector.CollisionData(0, 0);
+        //int contactCount = 0;
+        //contactCount += CollisionDetector.SphereAndSphere(sA, sB, ref data);
+        //contactCount += CollisionDetector.SphereAndHalfSpace(sA, p, ref data);
+        //contactCount += CollisionDetector.SphereAndHalfSpace(sB, p, ref data);
+
+        //contactCount += CollisionDetector.BoxAndSphere(bA, sA, ref data);
+        //contactCount += CollisionDetector.BoxAndSphere(bA, sB, ref data);
+        //contactCount += CollisionDetector.BoxAndHalfSpace(bA, p, ref data);
+
+        //Debug.Log(contactCount);
+
+        //foreach (CollisionDetector.Contact contact in data.contacts)
+        //{
+        //    Debug.DrawRay(contact.point, contact.normal * contact.penetration, Color.red);
+        //}
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.DrawRay(contact.point, contact.normal * contact.penetration, Color.red);
+            Debug.Log("Here");
+            sphereA.AddForceAtPoint(Vector3.left * 200, sphereA.transform.position + Vector3.up);
         }
     }
 }

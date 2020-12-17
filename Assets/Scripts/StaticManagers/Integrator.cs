@@ -13,7 +13,7 @@ public static class Integrator
         if (particle.inverseMass <= 0) // Immovable Object
             return;
 
-        // integrate velocity into offset
+        // integrate velocity into distance
         particle.transform.position += particle.velocity * dt;
 
         // get the acceleration

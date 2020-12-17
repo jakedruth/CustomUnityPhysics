@@ -5,18 +5,18 @@ public static class ForceManager
 {
     internal struct ForceGeneratorParticlePair
     {
-        public ForceGenerator2D forceGenerator;
-        public Particle2D particle;
+        public ForceGenerator forceGenerator;
+        public MyRigidBody body;
 
-        internal ForceGeneratorParticlePair(ForceGenerator2D forceGenerator, Particle2D particle)
+        internal ForceGeneratorParticlePair(ForceGenerator forceGenerator, MyRigidBody body)
         {
             this.forceGenerator = forceGenerator;
-            this.particle = particle;
+            this.body = body;
         }
 
         public void UpdateForce(float dt)
         {
-            forceGenerator.UpdateForce(particle, dt);
+            forceGenerator.UpdateForce(body, dt);
         }
     }
     private static readonly List<ForceGeneratorParticlePair> Registry;
@@ -31,7 +31,7 @@ public static class ForceManager
         for (int i = Registry.Count - 1; i >= 0; i--)
         {
             ForceGeneratorParticlePair pair = Registry[i];
-            if (pair.forceGenerator == null || pair.particle == null)
+            if (pair.forceGenerator == null || pair.body == null)
             {
                 Remove(pair);
                 continue;
@@ -42,12 +42,12 @@ public static class ForceManager
         }
     }
 
-    public static void Add(ForceGenerator2D forceGenerator, Particle2D particle)
+    public static void Add(ForceGenerator forceGenerator, MyRigidBody body)
     {
-        Registry.Add(new ForceGeneratorParticlePair(forceGenerator, particle));
+        Registry.Add(new ForceGeneratorParticlePair(forceGenerator, body));
     }
 
-    public static void Remove(ForceGenerator2D forceGenerator)
+    public static void Remove(ForceGenerator forceGenerator)
     {
         for (int i = Registry.Count - 1; i >= 0; i--)
         {
@@ -56,11 +56,11 @@ public static class ForceManager
         }
     }
 
-    public static void Remove(Particle2D particle)
+    public static void Remove(MyRigidBody body)
     {
         for (int i = Registry.Count - 1; i >= 0; i--)
         {
-            if (Registry[i].particle == particle)
+            if (Registry[i].body == body)
                 Registry.RemoveAt(i);
         }
     }

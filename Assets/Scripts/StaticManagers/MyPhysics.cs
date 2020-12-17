@@ -130,6 +130,14 @@ public class Matrix3X3
         return this * vector;
     }
 
+    public Vector3 TransformTranspose(Vector3 vector)
+    {
+        return new Vector3(
+            vector.x * _data[0] + vector.y * _data[3] + vector.z * _data[6],
+            vector.x * _data[1] + vector.y * _data[4] + vector.z * _data[7],
+            vector.x * _data[2] + vector.y * _data[5] + vector.z * _data[8]);
+    }
+
     /// <summary>
     /// Sets the matrix to be the inverse of the given matrix
     /// </summary>
@@ -233,6 +241,25 @@ public class Matrix3X3
                 throw new IndexOutOfRangeException("X and Y are bounded to [0, 3)");
             _data[x + y * 3] = value;
         }
+    }
+
+    /// <summary>
+    /// Set the three columns of the matrix from three vectors
+    /// </summary>
+    /// <param name="a">Column one</param>
+    /// <param name="b">Column two</param>
+    /// <param name="c">column three</param>
+    public void SetComponents(Vector3 a, Vector3 b, Vector3 c)
+    {
+        _data[0] = a.x;
+        _data[1] = a.y;
+        _data[2] = a.z;
+        _data[3] = b.x;
+        _data[4] = b.y;
+        _data[5] = b.z;
+        _data[6] = c.x;
+        _data[7] = c.y;
+        _data[8] = c.z;
     }
 }
 

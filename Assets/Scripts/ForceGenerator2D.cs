@@ -146,7 +146,7 @@ public class SpringForceGenerator : ForceGenerator2D
     {
         if (other == null)
         {
-            ForceManager.Remove(this);
+            //ForceManager.Remove(this);
             return;
         }
 

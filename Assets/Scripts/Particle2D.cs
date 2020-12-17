@@ -22,7 +22,7 @@ public class Particle2D : MonoBehaviour
 
     void OnDestroy()
     {
-        ForceManager.Remove(this);
+        //ForceManager.Remove(this);
         ParticleManager.particles.Remove(this);
     }
 
